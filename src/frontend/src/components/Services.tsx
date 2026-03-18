@@ -30,20 +30,30 @@ const services = [
 
 export default function Services() {
   return (
-    <section id="services" className="py-20">
-      {/* Orange band header */}
-      <div className="bg-primary py-6 mb-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
-          <h2 className="text-3xl font-bold text-primary-foreground tracking-wider font-display">
-            Our Services
-          </h2>
-          <p className="text-primary-foreground/80 text-sm hidden md:block">
-            Tailored transportation for every need
-          </p>
-        </div>
-      </div>
-
+    <section id="services" className="py-20 bg-background">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Section header */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="mb-14"
+        >
+          <p className="text-primary font-bold text-xs tracking-[0.3em] uppercase mb-2">
+            WHAT WE OFFER
+          </p>
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+            <h2 className="font-display text-4xl font-bold text-foreground italic">
+              Our Services
+            </h2>
+            <p className="text-muted-foreground text-sm max-w-sm">
+              Tailored transportation solutions for every journey — from daily
+              commutes to interstate travel.
+            </p>
+          </div>
+          <div className="w-16 h-1 bg-primary rounded-full mt-4" />
+        </motion.div>
+
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {services.map((service, i) => (
             <motion.div
@@ -53,15 +63,15 @@ export default function Services() {
               viewport={{ once: true }}
               transition={{ delay: i * 0.1 }}
               data-ocid={`services.item.${i + 1}`}
-              className="bg-card rounded-2xl p-6 shadow-card text-center hover:shadow-lg transition-shadow border border-border"
+              className="relative rounded-2xl p-6 shadow-card overflow-hidden border bg-card border-border transition-all hover:-translate-y-1 hover:shadow-lg"
             >
-              <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
-                <service.icon className="w-7 h-7 text-primary-foreground" />
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-5 bg-primary/10">
+                <service.icon className="w-6 h-6 text-primary" />
               </div>
-              <h3 className="font-bold text-lg text-foreground mb-2">
+              <h3 className="font-bold text-lg mb-2 text-foreground">
                 {service.title}
               </h3>
-              <p className="text-muted-foreground text-sm leading-relaxed">
+              <p className="text-sm leading-relaxed text-muted-foreground">
                 {service.description}
               </p>
             </motion.div>

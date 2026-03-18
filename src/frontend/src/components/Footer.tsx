@@ -1,7 +1,12 @@
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { useState } from "react";
-import { SiFacebook, SiInstagram, SiX, SiYoutube } from "react-icons/si";
+import { MapPin, Navigation, Phone } from "lucide-react";
+import {
+  SiFacebook,
+  SiInstagram,
+  SiWhatsapp,
+  SiX,
+  SiYoutube,
+} from "react-icons/si";
 
 const socialLinks = [
   { icon: SiFacebook, href: "#", label: "Facebook" },
@@ -15,12 +20,11 @@ const quickLinks = [
   { label: "About Us", href: "#about" },
   { label: "Services", href: "#services" },
   { label: "Fleet", href: "#fleet" },
-  { label: "Pricing", href: "#fleet" },
+  { label: "Benefits", href: "#benefits" },
   { label: "Contact", href: "#contact" },
 ];
 
 export default function Footer() {
-  const [email, setEmail] = useState("");
   const year = new Date().getFullYear();
 
   const scrollTo = (href: string) => {
@@ -34,17 +38,12 @@ export default function Footer() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
           {/* Brand */}
           <div>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
-                <span className="text-xl">🚕</span>
+            <div className="mb-4">
+              <div className="text-lg font-bold text-primary tracking-widest">
+                POOJA
               </div>
-              <div>
-                <div className="text-lg font-bold text-primary tracking-widest">
-                  POOJA
-                </div>
-                <div className="text-xs tracking-wider text-white/60">
-                  TAXI SERVICE
-                </div>
+              <div className="text-xs tracking-wider text-white/60">
+                TAXI SERVICES
               </div>
             </div>
             <p className="text-white/60 text-sm leading-relaxed">
@@ -95,15 +94,25 @@ export default function Footer() {
             <ul className="space-y-3">
               <li className="flex items-start gap-2 text-white/60 text-sm">
                 <span className="text-primary mt-0.5">📞</span>
-                +91 98765 43210
+                <a
+                  href="tel:+919156528800"
+                  className="hover:text-primary transition-colors"
+                >
+                  +91 91-56-52-8800
+                </a>
               </li>
               <li className="flex items-start gap-2 text-white/60 text-sm">
                 <span className="text-primary mt-0.5">✉️</span>
-                info@poojataxi.com
+                <a
+                  href="mailto:contact@ptsnagpur.in"
+                  className="hover:text-primary transition-colors"
+                >
+                  contact@ptsnagpur.in
+                </a>
               </li>
               <li className="flex items-start gap-2 text-white/60 text-sm">
                 <span className="text-primary mt-0.5">📍</span>
-                123 Main Road, City Center
+                Nagpur, Maharashtra - 440001
               </li>
               <li className="flex items-start gap-2 text-white/60 text-sm">
                 <span className="text-primary mt-0.5">🕐</span>
@@ -112,30 +121,45 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Newsletter */}
+          {/* Quick Contact */}
           <div>
             <h4 className="font-bold text-white tracking-wider mb-4 uppercase text-sm">
-              Newsletter
+              Quick Contact
             </h4>
             <p className="text-white/60 text-sm mb-4">
-              Subscribe for travel tips and exclusive offers.
+              Reach us instantly via WhatsApp, call, or directions.
             </p>
-            <div className="flex flex-col gap-2">
-              <Input
-                data-ocid="footer.newsletter.input"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Your email address"
-                className="bg-white/10 border-white/20 text-white placeholder:text-white/40 focus:border-primary"
-              />
+            <div className="flex flex-col gap-3">
               <Button
-                data-ocid="footer.newsletter.button"
-                className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold tracking-wider"
-                onClick={() => setEmail("")}
+                data-ocid="footer.whatsapp.button"
+                onClick={() =>
+                  window.open("https://wa.me/919156528800", "_blank")
+                }
+                className="bg-[oklch(0.52_0.17_145)] hover:bg-[oklch(0.45_0.17_145)] text-white font-bold tracking-wider flex items-center gap-2 rounded-full"
               >
-                SUBSCRIBE
+                <SiWhatsapp className="w-4 h-4" />
+                CHAT ON WHATSAPP
               </Button>
+              <Button
+                data-ocid="footer.call.button"
+                variant="outline"
+                onClick={() => window.open("tel:+919156528800")}
+                className="border-white/20 text-white hover:bg-white/10 font-bold tracking-wider flex items-center gap-2 rounded-full"
+              >
+                <Phone className="w-4 h-4" />
+                CALL US NOW
+              </Button>
+              <a
+                href="https://maps.app.goo.gl/nagpur"
+                target="_blank"
+                rel="noopener noreferrer"
+                data-ocid="footer.directions.link"
+                className="flex items-center gap-2 text-sm text-white/60 hover:text-primary transition-colors mt-1"
+              >
+                <Navigation className="w-4 h-4" />
+                <MapPin className="w-3 h-3" />
+                Get Directions
+              </a>
             </div>
           </div>
         </div>

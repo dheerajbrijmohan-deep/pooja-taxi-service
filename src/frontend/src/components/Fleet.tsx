@@ -5,23 +5,26 @@ import { motion } from "motion/react";
 const fleet = [
   {
     name: "Sedan",
+    waName: "Sedan",
     passengers: 4,
     pricePerKm: 12,
-    image: "/assets/generated/vehicle-sedan-transparent.dim_400x250.png",
+    image: "/assets/generated/swift-dzire-pearl-white-side.dim_800x500.jpg",
     features: ["AC", "Music System", "GPS Navigation"],
   },
   {
-    name: "SUV",
+    name: "SUV - Innova Crysta",
+    waName: "SUV+Innova+Crysta",
     passengers: 6,
     pricePerKm: 18,
-    image: "/assets/generated/vehicle-suv.dim_400x250.png",
+    image: "/assets/generated/suv-innova-crysta.dim_800x500.jpg",
     features: ["AC", "Spacious Luggage", "GPS Navigation", "Charging Points"],
   },
   {
-    name: "Luxury",
+    name: "Luxury - VW Virtus",
+    waName: "Luxury+VW+Virtus",
     passengers: 4,
     pricePerKm: 25,
-    image: "/assets/generated/vehicle-luxury.dim_400x250.png",
+    image: "/assets/generated/luxury-vw-virtus-black.dim_800x500.jpg",
     features: ["Premium AC", "Leather Seats", "WiFi", "Refreshments"],
   },
 ];
@@ -59,7 +62,7 @@ export default function Fleet() {
                 <img
                   src={vehicle.image}
                   alt={vehicle.name}
-                  className="h-full w-full object-contain"
+                  className="h-full w-full object-cover"
                 />
               </div>
               <div className="p-5">
@@ -85,9 +88,10 @@ export default function Fleet() {
                   data-ocid={`fleet.price.button.${i + 1}`}
                   className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-full"
                   onClick={() =>
-                    document
-                      .querySelector("#booking")
-                      ?.scrollIntoView({ behavior: "smooth" })
+                    window.open(
+                      `https://wa.me/919156528800?text=Hi%2C%20I%20want%20to%20book%20a%20${vehicle.waName}`,
+                      "_blank",
+                    )
                   }
                 >
                   ₹{vehicle.pricePerKm}/km — Book Now

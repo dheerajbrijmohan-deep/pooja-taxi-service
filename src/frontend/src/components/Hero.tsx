@@ -4,7 +4,6 @@ import { Label } from "@/components/ui/label";
 import {
   Calendar,
   Clock,
-  Loader2,
   MapPin,
   Navigation,
   Phone,
@@ -14,10 +13,8 @@ import {
 import { motion } from "motion/react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { useSubmitBooking } from "../hooks/useQueries";
 
 export default function Hero() {
-  const { mutateAsync, isPending } = useSubmitBooking();
   const [form, setForm] = useState({
     pickupLocation: "",
     destination: "",
@@ -34,7 +31,7 @@ export default function Hero() {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (
       !form.pickupLocation ||
@@ -46,21 +43,20 @@ export default function Hero() {
       toast.error("Please fill all required fields");
       return;
     }
-    try {
-      await mutateAsync({ ...form, passengers: Number(form.passengers) });
-      toast.success("Booking submitted! We'll contact you shortly.");
-      setForm({
-        pickupLocation: "",
-        destination: "",
-        date: "",
-        time: "",
-        passengers: "1",
-        customerName: "",
-        customerPhone: "",
-      });
-    } catch {
-      toast.error("Failed to submit booking. Please try again.");
-    }
+    const text = encodeURIComponent(
+      `Booking Request:\nName: ${form.customerName}\nPhone: ${form.customerPhone}\nFrom: ${form.pickupLocation}\nTo: ${form.destination}\nDate: ${form.date}${form.time ? ` at ${form.time}` : ""}\nPassengers: ${form.passengers}`,
+    );
+    window.open(`https://wa.me/919156528800?text=${text}`, "_blank");
+    toast.success("Redirecting to WhatsApp to confirm your booking!");
+    setForm({
+      pickupLocation: "",
+      destination: "",
+      date: "",
+      time: "",
+      passengers: "1",
+      customerName: "",
+      customerPhone: "",
+    });
   };
 
   return (
@@ -73,8 +69,7 @@ export default function Hero() {
         backgroundPosition: "center",
       }}
     >
-      {/* Overlay */}
-      <div className="absolute inset-0 bg-black/55" />
+      <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/60 to-black/40" />
 
       <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
@@ -84,10 +79,14 @@ export default function Hero() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.7 }}
           >
-            <p className="text-sm font-bold tracking-[0.3em] text-primary uppercase mb-2">
-              POOJA TAXI SERVICE
-            </p>
-            <h1 className="font-display text-5xl md:text-6xl lg:text-7xl font-bold italic text-white text-shadow-lg leading-tight mb-6">
+            <div className="inline-flex items-center gap-2 bg-primary/20 border border-primary/50 backdrop-blur-sm rounded-full px-4 py-1.5 mb-5">
+              <span className="text-base">🚕</span>
+              <span className="text-primary font-bold text-sm tracking-[0.2em] uppercase">
+                POOJA TAXI SERVICES
+              </span>
+            </div>
+
+            <h1 className="font-display text-5xl md:text-6xl lg:text-7xl font-bold italic text-white leading-tight mb-6">
               Travel with
               <br />
               <span className="text-primary">Ease</span>
@@ -96,29 +95,47 @@ export default function Hero() {
               Comfortable, reliable, and affordable taxi services across the
               city and beyond. Your journey, our commitment.
             </p>
+
+            <div className="flex flex-wrap gap-3 mb-8">
+              {[
+                "⭐ 4.9 Rated",
+                "✅ 10,000+ Rides",
+                "🛡️ Insured Rides",
+                "🕐 24/7 Available",
+              ].map((badge) => (
+                <span
+                  key={badge}
+                  className="text-xs text-white/70 font-medium bg-white/10 backdrop-blur-sm rounded-full px-3 py-1.5"
+                >
+                  {badge}
+                </span>
+              ))}
+            </div>
+
             <div className="flex flex-wrap gap-4">
               <Button
                 data-ocid="hero.book_now.primary_button"
                 onClick={() =>
-                  document
-                    .querySelector("#booking")
-                    ?.scrollIntoView({ behavior: "smooth" })
+                  window.open(
+                    "https://wa.me/919156528800?text=Hi%2C%20I%20want%20to%20book%20a%20ride",
+                    "_blank",
+                  )
                 }
-                className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold px-8 py-6 rounded-full text-base tracking-wider"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold px-8 py-6 rounded-full text-base tracking-wider shadow-lg shadow-primary/30"
               >
                 BOOK YOUR RIDE
               </Button>
               <Button
-                data-ocid="hero.services.secondary_button"
+                data-ocid="hero.join_driver.secondary_button"
                 variant="outline"
                 onClick={() =>
                   document
-                    .querySelector("#services")
+                    .querySelector("#benefits")
                     ?.scrollIntoView({ behavior: "smooth" })
                 }
                 className="border-white text-white hover:bg-white hover:text-foreground font-bold px-8 py-6 rounded-full text-base tracking-wider bg-transparent"
               >
-                OUR SERVICES
+                JOIN AS DRIVER
               </Button>
             </div>
           </motion.div>
@@ -129,15 +146,18 @@ export default function Hero() {
             initial={{ opacity: 0, x: 40 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.7, delay: 0.2 }}
-            className="bg-brand-charcoal rounded-2xl p-6 shadow-2xl"
+            className="bg-[oklch(0.18_0_0/0.92)] backdrop-blur-md rounded-2xl p-6 shadow-2xl border border-white/10"
             data-ocid="booking.modal"
           >
-            <h2 className="text-white font-bold text-xl mb-5 tracking-wide">
-              ⚡ Instant Booking
-            </h2>
+            <div className="flex items-center gap-2 mb-5">
+              <div className="w-1 h-6 bg-primary rounded-full" />
+              <h2 className="text-white font-bold text-xl tracking-wide">
+                Instant Booking via WhatsApp
+              </h2>
+            </div>
             <form onSubmit={handleSubmit} className="space-y-3">
               <div>
-                <Label className="text-white/70 text-xs tracking-wider mb-1 block">
+                <Label className="text-white/60 text-xs tracking-wider mb-1 block">
                   PICKUP LOCATION *
                 </Label>
                 <div className="relative">
@@ -148,12 +168,12 @@ export default function Hero() {
                     value={form.pickupLocation}
                     onChange={handleChange}
                     placeholder="Enter pickup address"
-                    className="pl-9 bg-white/10 border-white/20 text-white placeholder:text-white/40 focus:border-primary"
+                    className="pl-9 bg-white/8 border-white/15 text-white placeholder:text-white/30 focus:border-primary focus:ring-1 focus:ring-primary/40 transition-all"
                   />
                 </div>
               </div>
               <div>
-                <Label className="text-white/70 text-xs tracking-wider mb-1 block">
+                <Label className="text-white/60 text-xs tracking-wider mb-1 block">
                   DESTINATION *
                 </Label>
                 <div className="relative">
@@ -164,13 +184,13 @@ export default function Hero() {
                     value={form.destination}
                     onChange={handleChange}
                     placeholder="Enter destination"
-                    className="pl-9 bg-white/10 border-white/20 text-white placeholder:text-white/40 focus:border-primary"
+                    className="pl-9 bg-white/8 border-white/15 text-white placeholder:text-white/30 focus:border-primary focus:ring-1 focus:ring-primary/40 transition-all"
                   />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <Label className="text-white/70 text-xs tracking-wider mb-1 block">
+                  <Label className="text-white/60 text-xs tracking-wider mb-1 block">
                     DATE *
                   </Label>
                   <div className="relative">
@@ -181,12 +201,12 @@ export default function Hero() {
                       type="date"
                       value={form.date}
                       onChange={handleChange}
-                      className="pl-9 bg-white/10 border-white/20 text-white placeholder:text-white/40 focus:border-primary"
+                      className="pl-9 bg-white/8 border-white/15 text-white placeholder:text-white/30 focus:border-primary focus:ring-1 focus:ring-primary/40 transition-all"
                     />
                   </div>
                 </div>
                 <div>
-                  <Label className="text-white/70 text-xs tracking-wider mb-1 block">
+                  <Label className="text-white/60 text-xs tracking-wider mb-1 block">
                     TIME
                   </Label>
                   <div className="relative">
@@ -197,13 +217,13 @@ export default function Hero() {
                       type="time"
                       value={form.time}
                       onChange={handleChange}
-                      className="pl-9 bg-white/10 border-white/20 text-white placeholder:text-white/40 focus:border-primary"
+                      className="pl-9 bg-white/8 border-white/15 text-white placeholder:text-white/30 focus:border-primary focus:ring-1 focus:ring-primary/40 transition-all"
                     />
                   </div>
                 </div>
               </div>
               <div>
-                <Label className="text-white/70 text-xs tracking-wider mb-1 block">
+                <Label className="text-white/60 text-xs tracking-wider mb-1 block">
                   PASSENGERS
                 </Label>
                 <div className="relative">
@@ -213,7 +233,7 @@ export default function Hero() {
                     name="passengers"
                     value={form.passengers}
                     onChange={handleChange}
-                    className="w-full pl-9 pr-3 py-2 rounded-md bg-white/10 border border-white/20 text-white focus:border-primary focus:outline-none text-sm"
+                    className="w-full pl-9 pr-3 py-2 rounded-md bg-white/8 border border-white/15 text-white focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/40 text-sm transition-all"
                   >
                     {[1, 2, 3, 4, 5, 6].map((n) => (
                       <option key={n} value={n} className="bg-zinc-800">
@@ -224,7 +244,7 @@ export default function Hero() {
                 </div>
               </div>
               <div>
-                <Label className="text-white/70 text-xs tracking-wider mb-1 block">
+                <Label className="text-white/60 text-xs tracking-wider mb-1 block">
                   YOUR NAME *
                 </Label>
                 <div className="relative">
@@ -235,12 +255,12 @@ export default function Hero() {
                     value={form.customerName}
                     onChange={handleChange}
                     placeholder="Full name"
-                    className="pl-9 bg-white/10 border-white/20 text-white placeholder:text-white/40 focus:border-primary"
+                    className="pl-9 bg-white/8 border-white/15 text-white placeholder:text-white/30 focus:border-primary focus:ring-1 focus:ring-primary/40 transition-all"
                   />
                 </div>
               </div>
               <div>
-                <Label className="text-white/70 text-xs tracking-wider mb-1 block">
+                <Label className="text-white/60 text-xs tracking-wider mb-1 block">
                   PHONE NUMBER *
                 </Label>
                 <div className="relative">
@@ -251,24 +271,16 @@ export default function Hero() {
                     value={form.customerPhone}
                     onChange={handleChange}
                     placeholder="+91 XXXXX XXXXX"
-                    className="pl-9 bg-white/10 border-white/20 text-white placeholder:text-white/40 focus:border-primary"
+                    className="pl-9 bg-white/8 border-white/15 text-white placeholder:text-white/30 focus:border-primary focus:ring-1 focus:ring-primary/40 transition-all"
                   />
                 </div>
               </div>
               <Button
                 data-ocid="booking.submit.button"
                 type="submit"
-                disabled={isPending}
-                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold py-6 rounded-xl tracking-wider mt-2"
+                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold py-6 rounded-xl tracking-wider mt-2 shadow-lg shadow-primary/25 transition-all"
               >
-                {isPending ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />{" "}
-                    PROCESSING...
-                  </>
-                ) : (
-                  "BOOK YOUR RIDE"
-                )}
+                BOOK YOUR RIDE VIA WHATSAPP →
               </Button>
             </form>
           </motion.div>

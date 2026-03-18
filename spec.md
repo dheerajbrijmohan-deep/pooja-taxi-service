@@ -1,28 +1,31 @@
-# Pooja Taxi Service
+# Pooja Taxi Service - SEO Optimization
 
 ## Current State
-New project, no existing application.
+The site is a full-featured taxi service landing page with hero, services, fleet, benefits, testimonials, and contact sections. The index.html has a blank title and no meta tags.
 
 ## Requested Changes (Diff)
 
 ### Add
-- Full taxi service landing website named "POOJA TAXI SERVICE" with tagline "Travel with Ease"
-- Header/nav with logo, navigation links (Home, About Us, Services, Fleet, Pricing, Contact), and Book Now CTA
-- Hero section with headline, tagline, and an Instant Booking form (Pickup, Destination, Date, Time, Passengers)
-- Our Services section with 4 cards (City Transfer, Airport Transfer, Outstation, Hourly Rental)
-- Choose Your Ride fleet section with 3 vehicle types (Sedan, SUV, Luxury)
-- Why Choose Us section with 4 feature highlights
-- Client Testimonials section (3 testimonials)
-- Contact / Find Us section
-- Footer with brand info, quick links, contact details, social links
+- Comprehensive meta tags: title, description, keywords, canonical URL
+- Open Graph meta tags (Facebook/WhatsApp share previews)
+- Twitter Card meta tags
+- JSON-LD structured data: LocalBusiness schema with address, phone, geo coordinates, services
+- robots.txt allowing all crawlers
+- sitemap.xml for search engine discovery
+- `lang="en"` already present, keep it
+- Semantic HTML: ensure sections use proper heading hierarchy (h1 in hero, h2 for section titles)
+- Alt text audit on images
 
 ### Modify
-N/A
+- index.html: add all meta tags, JSON-LD schema, favicon link
+- Hero.tsx: ensure h1 is used for primary heading
+- Services/Fleet/etc: ensure h2 section headings
 
 ### Remove
-N/A
+- Nothing removed
 
 ## Implementation Plan
-1. Generate minimal Motoko backend for storing booking inquiries and contact messages
-2. Build full React frontend matching the warm orange/cream/charcoal design from the preview
-3. Wire booking form to backend to store ride requests
+1. Update index.html with full SEO meta tags and JSON-LD LocalBusiness schema
+2. Add robots.txt to public folder
+3. Add sitemap.xml to public folder
+4. Audit and update heading hierarchy in components

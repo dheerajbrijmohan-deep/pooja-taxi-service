@@ -8,7 +8,7 @@ const navLinks = [
   { label: "ABOUT US", href: "#about" },
   { label: "SERVICES", href: "#services" },
   { label: "FLEET", href: "#fleet" },
-  { label: "PRICING", href: "#fleet" },
+  { label: "BENEFITS", href: "#benefits" },
   { label: "CONTACT", href: "#contact" },
 ];
 
@@ -25,18 +25,13 @@ export default function Navbar() {
     <header className="sticky top-0 z-50 bg-brand-cream border-b border-border shadow-xs">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 md:h-20">
-          {/* Logo */}
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
-              <span className="text-xl">🚕</span>
+          {/* Brand Text */}
+          <div className="leading-tight">
+            <div className="text-xl font-bold text-primary tracking-widest font-sans">
+              POOJA
             </div>
-            <div className="leading-tight">
-              <div className="text-xl font-bold text-primary tracking-widest font-sans">
-                POOJA
-              </div>
-              <div className="text-xs font-semibold text-foreground tracking-wider">
-                TAXI SERVICE
-              </div>
+            <div className="text-xs font-semibold text-foreground tracking-wider">
+              TAXI SERVICES
             </div>
           </div>
 
@@ -55,11 +50,24 @@ export default function Navbar() {
             ))}
           </nav>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <Button
+              data-ocid="nav.join_driver.button"
+              variant="outline"
+              className="hidden md:flex border-primary text-primary hover:bg-primary hover:text-primary-foreground rounded-full px-4 text-xs font-bold tracking-wider"
+              onClick={() => scrollTo("#benefits")}
+            >
+              JOIN AS DRIVER
+            </Button>
             <Button
               data-ocid="nav.book_now.button"
               className="hidden md:flex bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-6 text-sm font-bold tracking-wider"
-              onClick={() => scrollTo("#booking")}
+              onClick={() =>
+                window.open(
+                  "https://wa.me/919156528800?text=Hi%2C%20I%20want%20to%20book%20a%20ride",
+                  "_blank",
+                )
+              }
             >
               BOOK NOW
             </Button>
@@ -96,9 +104,22 @@ export default function Navbar() {
                 </button>
               ))}
               <Button
+                data-ocid="nav.mobile_join_driver.button"
+                variant="outline"
+                className="border-primary text-primary hover:bg-primary hover:text-primary-foreground rounded-full font-bold tracking-wider"
+                onClick={() => scrollTo("#benefits")}
+              >
+                JOIN AS DRIVER
+              </Button>
+              <Button
                 data-ocid="nav.mobile_book_now.button"
                 className="bg-primary text-primary-foreground rounded-full font-bold tracking-wider"
-                onClick={() => scrollTo("#booking")}
+                onClick={() =>
+                  window.open(
+                    "https://wa.me/919156528800?text=Hi%2C%20I%20want%20to%20book%20a%20ride",
+                    "_blank",
+                  )
+                }
               >
                 BOOK NOW
               </Button>

@@ -6,23 +6,32 @@ const testimonials = [
     quote:
       "Great service! Very punctual and professional. The driver was courteous and the car was spotless.",
     name: "Rahul M.",
+    role: "Regular Customer",
     rating: 5,
   },
   {
     quote:
       "Comfortable ride and courteous driver. Highly recommend Pooja Taxi for airport transfers!",
     name: "Priya S.",
+    role: "Business Traveler",
     rating: 5,
   },
   {
     quote:
       "Best taxi service in the area. Affordable rates and on-time every single time. Will use again!",
     name: "Amit K.",
+    role: "Outstation Trip",
     rating: 5,
   },
 ];
 
 const gridLines = [0, 1, 2, 3, 4, 5, 6, 7];
+
+const avatarColors = [
+  "from-primary/80 to-primary",
+  "from-amber-500/80 to-amber-600",
+  "from-orange-600/80 to-orange-700",
+];
 
 export default function TestimonialsAndMap() {
   return (
@@ -31,14 +40,20 @@ export default function TestimonialsAndMap() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           {/* Testimonials */}
           <div>
-            <motion.h2
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="font-display text-3xl font-bold text-foreground mb-8"
+              className="mb-8"
             >
-              Client Testimonials
-            </motion.h2>
+              <p className="text-primary font-bold text-xs tracking-[0.3em] uppercase mb-2">
+                HAPPY RIDERS
+              </p>
+              <h2 className="font-display text-3xl font-bold text-foreground italic">
+                Client Testimonials
+              </h2>
+            </motion.div>
+
             <div className="space-y-4">
               {testimonials.map((t, i) => (
                 <motion.div
@@ -48,26 +63,39 @@ export default function TestimonialsAndMap() {
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.1 }}
                   data-ocid={`testimonials.item.${i + 1}`}
-                  className="bg-card rounded-xl p-5 shadow-card border border-border"
+                  className="relative rounded-xl p-5 border overflow-hidden bg-card border-border shadow-card"
                 >
+                  <span className="absolute top-2 right-4 font-display text-8xl font-bold leading-none select-none pointer-events-none text-primary/10">
+                    &ldquo;
+                  </span>
+
                   <div className="flex gap-0.5 mb-3">
                     {Array.from({ length: t.rating }).map((_, j) => (
                       <Star
                         key={`star-${t.name}-${j}`}
-                        className="w-4 h-4 fill-primary text-primary"
+                        className="w-3.5 h-3.5 fill-primary text-primary"
                       />
                     ))}
                   </div>
-                  <p className="text-foreground text-sm leading-relaxed mb-4 italic">
-                    "{t.quote}"
+
+                  <p className="text-sm leading-relaxed mb-4 italic relative z-10 text-foreground">
+                    &ldquo;{t.quote}&rdquo;
                   </p>
+
                   <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 bg-primary rounded-full flex items-center justify-center text-primary-foreground font-bold text-sm">
+                    <div
+                      className={`w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-sm bg-gradient-to-br ${avatarColors[i]}`}
+                    >
                       {t.name[0]}
                     </div>
-                    <span className="font-semibold text-sm text-foreground">
-                      {t.name}
-                    </span>
+                    <div>
+                      <span className="font-semibold text-sm block text-foreground">
+                        {t.name}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        {t.role}
+                      </span>
+                    </div>
                   </div>
                 </motion.div>
               ))}
@@ -76,14 +104,20 @@ export default function TestimonialsAndMap() {
 
           {/* Find Us */}
           <div>
-            <motion.h2
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="font-display text-3xl font-bold text-foreground mb-8"
+              className="mb-8"
             >
-              Find Us
-            </motion.h2>
+              <p className="text-primary font-bold text-xs tracking-[0.3em] uppercase mb-2">
+                LOCATION
+              </p>
+              <h2 className="font-display text-3xl font-bold text-foreground italic">
+                Find Us
+              </h2>
+            </motion.div>
+
             <motion.div
               initial={{ opacity: 0, scale: 0.97 }}
               whileInView={{ opacity: 1, scale: 1 }}
@@ -108,18 +142,18 @@ export default function TestimonialsAndMap() {
                     />
                   ))}
                 </div>
-                <div className="relative z-10 text-center">
+                <div className="relative z-10 text-center px-6">
                   <div className="w-14 h-14 bg-primary rounded-full flex items-center justify-center mx-auto mb-3 shadow-lg">
                     <MapPin className="w-7 h-7 text-primary-foreground" />
                   </div>
                   <p className="font-bold text-foreground text-base">
-                    123 Main Road, City Center
+                    Chatrapati Shivaji Maharaj Chowk
                   </p>
                   <p className="text-muted-foreground text-sm mt-1">
-                    Near Central Bus Terminal
+                    Shambhu Nagar Main Road, Nagpur, Maharashtra - 440014
                   </p>
                   <a
-                    href="https://maps.google.com"
+                    href="https://maps.app.goo.gl/YSnJSLun4peyYznv9"
                     target="_blank"
                     rel="noopener noreferrer"
                     data-ocid="map.directions.link"
@@ -136,7 +170,7 @@ export default function TestimonialsAndMap() {
                 <div>
                   <p className="text-xs text-muted-foreground">Call Us</p>
                   <p className="font-semibold text-sm text-foreground">
-                    +91 98765 43210
+                    +91 91-56-52-8800
                   </p>
                 </div>
               </div>
@@ -145,7 +179,7 @@ export default function TestimonialsAndMap() {
                 <div>
                   <p className="text-xs text-muted-foreground">Email Us</p>
                   <p className="font-semibold text-sm text-foreground">
-                    info@poojataxi.com
+                    contact@ptsnagpur.in
                   </p>
                 </div>
               </div>

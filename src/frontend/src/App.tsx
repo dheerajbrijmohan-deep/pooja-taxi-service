@@ -1,5 +1,6 @@
 import { Toaster } from "@/components/ui/sonner";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import Benefits from "./components/Benefits";
 import Contact from "./components/Contact";
 import Fleet from "./components/Fleet";
 import Footer from "./components/Footer";
@@ -21,6 +22,7 @@ export default function App() {
           <Services />
           <Fleet />
           <WhyChooseUs />
+          <Benefits />
           <TestimonialsAndMap />
           <Contact />
         </main>
