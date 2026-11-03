@@ -207,7 +207,7 @@ function investments_route(string $method, string $path, array $user): void {
         $to = (string) ($_GET['to'] ?? '');
         if (($from !== '' && !cw_valid_date($from)) || ($to !== '' && !cw_valid_date($to))) fail('Enter a valid date range', 422);
         $sql = 'SELECT * FROM investments WHERE invest_date >= ? AND invest_date <= ?';
-        $args = [$from !== '' ? $from : '0000-01-01', $to !== '' ? $to : '9999-12-31'];
+        $args = [$from !== '' ? $from : '1900-01-01', $to !== '' ? $to : '9999-12-31'];
         if ($biz !== '') { $sql .= ' AND business = ?'; $args[] = $biz; }
         $st = $pdo->prepare($sql . ' ORDER BY invest_date DESC, id DESC LIMIT 20000');
         $st->execute($args);

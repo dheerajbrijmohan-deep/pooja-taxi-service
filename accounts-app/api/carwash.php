@@ -84,7 +84,7 @@ function carwash_route(string $method, string $path, array $user): void {
         if ($from !== '' || $to !== '') {
             if (($from !== '' && !cw_valid_date($from)) || ($to !== '' && !cw_valid_date($to))) fail('Enter a valid date range', 422);
             $st = $pdo->prepare('SELECT * FROM carwash_entries WHERE entry_date >= ? AND entry_date <= ? ORDER BY entry_date DESC, id DESC LIMIT 50000');
-            $st->execute([$from !== '' ? $from : '0000-01-01', $to !== '' ? $to : '9999-12-31']);
+            $st->execute([$from !== '' ? $from : '1900-01-01', $to !== '' ? $to : '9999-12-31']);
             $rows = $st->fetchAll();
         } else {
             $rows = $pdo->query('SELECT * FROM carwash_entries ORDER BY entry_date DESC, id DESC LIMIT 2000')->fetchAll();

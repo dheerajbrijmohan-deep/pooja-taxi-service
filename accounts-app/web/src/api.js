@@ -1,6 +1,7 @@
+import { API_BASE } from "./base.js";
 // Thin fetch wrapper for the PHP API. Same origin, cookie session.
 export async function api(path, { method = "GET", body } = {}) {
-  const res = await fetch(`/api/${path}`, {
+  const res = await fetch(`${API_BASE}${path}`, {
     method,
     credentials: "same-origin",
     headers: {

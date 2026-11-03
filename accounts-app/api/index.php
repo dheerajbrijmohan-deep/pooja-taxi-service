@@ -15,7 +15,7 @@ date_default_timezone_set('Asia/Kolkata');
 
 $method = $_SERVER['REQUEST_METHOD'];
 $path = trim((string) parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/');
-$path = preg_replace('#^api/?#', '', $path);
+$path = preg_replace('#^(?:[^/]+/)*?api(?:/|$)#', '', $path, 1); // works for /api/x and /manage/api/x
 
 // CSRF guard: state-changing calls must carry our custom header (cross-site forms can't).
 if ($method !== 'GET' && ($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '') !== 'fetch') {

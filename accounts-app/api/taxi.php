@@ -215,7 +215,7 @@ function taxi_range(): array {
         if (!cw_valid_date($f) || !cw_valid_date($t) || $t < $f) fail('Enter a valid date range', 422);
         return [$f, $t];
     }
-    return ($_GET['month'] ?? '') === 'all' ? ['0000-01-01', '9999-12-31'] : taxi_month_bounds((string) ($_GET['month'] ?? date('Y-m')));
+    return ($_GET['month'] ?? '') === 'all' ? ['1900-01-01', '9999-12-31'] : taxi_month_bounds((string) ($_GET['month'] ?? date('Y-m')));
 }
 
 function taxi_month_bounds(string $month): array {

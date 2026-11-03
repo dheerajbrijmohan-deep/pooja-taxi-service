@@ -46,7 +46,7 @@ function expenses_route(string $method, string $path, array $user): void {
         // everyday list: latest 3,000; with a date range (reports): up to 50,000 inside that range
         $ranged = $from !== '' || $to !== '';
         $st = $pdo->prepare("SELECT * FROM expenses WHERE business = ? AND expense_date >= ? AND expense_date <= ?$salary ORDER BY expense_date DESC, id DESC LIMIT " . ($ranged ? 50000 : 3000));
-        $st->execute([$business, $from !== '' ? $from : '0000-01-01', $to !== '' ? $to : '9999-12-31']);
+        $st->execute([$business, $from !== '' ? $from : '1900-01-01', $to !== '' ? $to : '9999-12-31']);
         json_out(['expenses' => array_map('ce_row', $st->fetchAll())]);
     }
 

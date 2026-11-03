@@ -247,7 +247,6 @@ CREATE TABLE IF NOT EXISTS taxi_trips (
   trip_date DATE NOT NULL,
   driver_id INT UNSIGNED NOT NULL,
   vehicle_id INT UNSIGNED NULL,
-  vehicle_id INT UNSIGNED NULL,
   shift VARCHAR(20) NOT NULL DEFAULT 'Day',
   in_time VARCHAR(5) NOT NULL DEFAULT '',
   out_time VARCHAR(5) NOT NULL DEFAULT '',

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { API_BASE } from "../base.js";
 import { Link, useParams } from "react-router-dom";
 import { api } from "../api.js";
 import { useAuth } from "../auth.jsx";
@@ -167,8 +168,8 @@ export default function TaxiVehicleDetail() {
             <tbody className="divide-y divide-border">
               {d.documents.map((x) => (
                 <tr key={x.id} className="hover:bg-muted/60">
-                  <td className={td}><a href={`/api/taxi/vehicle-documents/${x.id}`} target="_blank" rel="noreferrer" className="block w-16 h-12 rounded-md border border-border overflow-hidden bg-muted flex items-center justify-center">
-                    {x.mime.startsWith("image/") ? <img src={`/api/taxi/vehicle-documents/${x.id}`} alt={x.doc_type} className="w-full h-full object-cover" /> : <span className="text-[10px] font-bold tracking-widest text-muted-foreground">PDF</span>}
+                  <td className={td}><a href={`${API_BASE}taxi/vehicle-documents/${x.id}`} target="_blank" rel="noreferrer" className="block w-16 h-12 rounded-md border border-border overflow-hidden bg-muted flex items-center justify-center">
+                    {x.mime.startsWith("image/") ? <img src={`${API_BASE}taxi/vehicle-documents/${x.id}`} alt={x.doc_type} className="w-full h-full object-cover" /> : <span className="text-[10px] font-bold tracking-widest text-muted-foreground">PDF</span>}
                   </a></td>
                   <td className={`${td} font-semibold`}>{x.doc_type}</td>
                   <td className={td}>{x.doc_number || "—"}</td>
@@ -176,7 +177,7 @@ export default function TaxiVehicleDetail() {
                   <td className={`${td} whitespace-nowrap`}><Expiry iso={x.expires_on} /></td>
                   <td className={`${td} min-w-32`}>{x.notes}</td>
                   <td className={`${td} whitespace-nowrap text-right`}>
-                    <a href={`/api/taxi/vehicle-documents/${x.id}`} target="_blank" rel="noreferrer" className={`${link} mr-3`}>VIEW</a>
+                    <a href={`${API_BASE}taxi/vehicle-documents/${x.id}`} target="_blank" rel="noreferrer" className={`${link} mr-3`}>VIEW</a>
                     {isAdmin && <><button className={`${link} mr-3`} onClick={() => setModal({ kind: "docEdit", item: x })}>EDIT</button><button className="text-xs font-bold tracking-wider text-destructive hover:underline" onClick={() => del(`taxi/vehicle-documents/${x.id}`, `${x.doc_type} document`)}>DELETE</button></>}
                   </td>
                 </tr>

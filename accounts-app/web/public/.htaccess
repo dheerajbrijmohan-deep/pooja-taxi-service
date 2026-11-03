@@ -1,5 +1,6 @@
 RewriteEngine On
-# API requests go to PHP
+# API requests go to PHP (index.php itself is left alone, so the rule cannot loop)
+RewriteRule ^api/index\.php$ - [L]
 RewriteRule ^api/(.*)$ api/index.php [L,QSA]
 # Everything else that is not a real file goes to the React app
 RewriteCond %{REQUEST_FILENAME} !-f

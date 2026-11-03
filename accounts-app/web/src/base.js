@@ -1,0 +1,3 @@
+// The app can live at the site root (development) or under a folder such as /manage/ (deployed next to the homepage).
+// Vite fills BASE_URL from the build's base setting. API calls and document links always go to <base>api/...
+export const API_BASE = `${import.meta.env.BASE_URL}api/`;

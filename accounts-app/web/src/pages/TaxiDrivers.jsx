@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { API_BASE } from "../base.js";
 import { Link, useNavigate } from "react-router-dom";
 import { api } from "../api.js";
 import Avatar from "../components/Avatar.jsx";
@@ -61,7 +62,7 @@ export default function TaxiDrivers() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {list.map((d) => (
           <Link key={d.id} to={`/business/taxi/drivers/${d.id}`} className="bg-card rounded-2xl shadow-card border border-border p-5 flex gap-4 items-center hover:shadow-lg hover:-translate-y-0.5 transition">
-            <Avatar name={d.name} src={d.photo_id ? `/api/taxi/driver-documents/${d.photo_id}` : undefined} size={64} />
+            <Avatar name={d.name} src={d.photo_id ? `${API_BASE}taxi/driver-documents/${d.photo_id}` : undefined} size={64} />
             <div className="min-w-0 flex-1">
               <div className="font-semibold truncate">{d.name}</div>
               <div className="text-sm text-muted-foreground">{d.join_date ? `Joined ${fmtDate(d.join_date)}` : "Joining date not set"}</div>

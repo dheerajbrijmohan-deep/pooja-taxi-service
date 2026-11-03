@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { API_BASE } from "../base.js";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { api } from "../api.js";
 import Avatar from "../components/Avatar.jsx";
@@ -78,8 +79,8 @@ function DocRow({ type, docs, empId, onChanged, setError }) {
         <div className="flex flex-wrap gap-3">
           {docs.map((d) => (
             <div key={d.id} className="w-36">
-              <a href={`/api/employees/documents/${d.id}`} target="_blank" rel="noreferrer" className="block h-28 rounded-lg border border-border overflow-hidden bg-muted flex items-center justify-center">
-                {d.mime.startsWith("image/") ? <img src={`/api/employees/documents/${d.id}`} alt={d.doc_type} className="w-full h-full object-cover" /> : <span className="font-bold tracking-widest text-muted-foreground">PDF</span>}
+              <a href={`${API_BASE}employees/documents/${d.id}`} target="_blank" rel="noreferrer" className="block h-28 rounded-lg border border-border overflow-hidden bg-muted flex items-center justify-center">
+                {d.mime.startsWith("image/") ? <img src={`${API_BASE}employees/documents/${d.id}`} alt={d.doc_type} className="w-full h-full object-cover" /> : <span className="font-bold tracking-widest text-muted-foreground">PDF</span>}
               </a>
               <div className="text-xs mt-1 truncate" title={d.original_name}>{d.original_name}</div>
               <div className="flex justify-between text-xs text-muted-foreground">

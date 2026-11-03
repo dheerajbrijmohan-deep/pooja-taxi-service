@@ -15,7 +15,8 @@ function db(): PDO {
         $pdo = new PDO('sqlite:' . $c['sqlite_path'], null, null, $opts);
     } else {
         $m = $c['mysql'];
-        $pdo = new PDO("mysql:host={$m['host']};dbname={$m['name']};charset=utf8mb4", $m['user'], $m['pass'], $opts);
+        $pdo = new PDO("mysql:host={$m['host']};port=" . ($m['port'] ?? 3306) . ";dbname={$m['name']};charset=utf8mb4", $m['user'], $m['pass'], $opts);
+        $pdo->exec("SET time_zone = '+00:00'"); // dates are stored as UTC text on both databases
     }
     return $pdo;
 }

@@ -115,7 +115,7 @@ function taxi_account_route(string $method, string $path, array $user): void {
         if ($car['account_name'] === '') fail('This car has no account sheet', 404);
         [$from, $to] = taxi_range();
         $rows = ta_rows($pdo, $car, $from, $to);
-        $all = ta_totals(ta_rows($pdo, $car, '0000-01-01', '9999-12-31'));
+        $all = ta_totals(ta_rows($pdo, $car, '1900-01-01', '9999-12-31'));
         $dm = ta_deposits($pdo, $car);
         $thisMonth = array_values(array_filter($dm, fn($m) => $m['month'] === substr($today, 0, 7)))[0] ?? ['total' => 0.0, 'days' => 0];
         json_out(['vehicle' => ['id' => (int) $car['id'], 'code' => $car['code'], 'model' => $car['model'], 'account_name' => $car['account_name'], 'deposit_to' => $car['deposit_to'], 'run_day_charge' => (float) $car['run_day_charge']],

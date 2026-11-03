@@ -10,3 +10,4 @@ api/data/import/
 *.xlsx
 api/bin/import-*.php
 api/data/
+deploy/

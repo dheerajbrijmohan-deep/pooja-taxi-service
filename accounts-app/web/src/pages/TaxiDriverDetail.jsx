@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { API_BASE } from "../base.js";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { api } from "../api.js";
 import Avatar from "../components/Avatar.jsx";
@@ -55,14 +56,14 @@ function DocRow({ type, docs, driverId, onChanged, setError }) {
         <div className="flex flex-wrap gap-3">
           {docs.map((d) => (
             <div key={d.id} className="w-40">
-              <a href={`/api/taxi/driver-documents/${d.id}`} target="_blank" rel="noreferrer" className="block h-28 rounded-lg border border-border overflow-hidden bg-muted flex items-center justify-center">
-                {d.mime.startsWith("image/") ? <img src={`/api/taxi/driver-documents/${d.id}`} alt={d.doc_type} className="w-full h-full object-cover" /> : <span className="font-bold tracking-widest text-muted-foreground">PDF</span>}
+              <a href={`${API_BASE}taxi/driver-documents/${d.id}`} target="_blank" rel="noreferrer" className="block h-28 rounded-lg border border-border overflow-hidden bg-muted flex items-center justify-center">
+                {d.mime.startsWith("image/") ? <img src={`${API_BASE}taxi/driver-documents/${d.id}`} alt={d.doc_type} className="w-full h-full object-cover" /> : <span className="font-bold tracking-widest text-muted-foreground">PDF</span>}
               </a>
               <div className="text-xs mt-1 truncate" title={d.original_name}>{d.original_name}</div>
               <div className="flex justify-between text-xs text-muted-foreground">
                 <span>{kb(d.size)}</span>
                 <span>
-                  <a href={`/api/taxi/driver-documents/${d.id}?download=1`} className="font-bold tracking-wider text-primary hover:underline mr-2">DOWNLOAD</a>
+                  <a href={`${API_BASE}taxi/driver-documents/${d.id}?download=1`} className="font-bold tracking-wider text-primary hover:underline mr-2">DOWNLOAD</a>
                   <button onClick={() => remove(d)} className="font-bold tracking-wider text-destructive hover:underline">DELETE</button>
                 </span>
               </div>
@@ -121,7 +122,7 @@ export default function TaxiDriverDetail() {
       </div>
       <div className="flex flex-wrap items-center justify-between gap-4 mt-3 mb-8">
         <div className="flex items-center gap-5">
-          <Avatar name={d.name} src={photo ? `/api/taxi/driver-documents/${photo.id}` : undefined} size={96} />
+          <Avatar name={d.name} src={photo ? `${API_BASE}taxi/driver-documents/${photo.id}` : undefined} size={96} />
           <div>
             <h1 className="font-display text-4xl font-bold italic">{d.name}</h1>
             <p className="text-muted-foreground mt-1">
@@ -133,7 +134,7 @@ export default function TaxiDriverDetail() {
         <div className="print:hidden flex flex-wrap gap-3">
           <button onClick={() => setEdit(true)} className={`${btn} bg-primary text-primary-foreground hover:opacity-90`}>EDIT</button>
           <button onClick={printDetails} className={`${btn} border border-primary text-primary hover:bg-primary hover:text-primary-foreground transition-colors`}>DOWNLOAD DETAILS (PDF)</button>
-          {data.documents.length > 0 && <a href={`/api/taxi/driver-profiles/${id}/documents.zip`} className={`${btn} border border-primary text-primary hover:bg-primary hover:text-primary-foreground transition-colors`}>DOWNLOAD DOCUMENTS (ZIP)</a>}
+          {data.documents.length > 0 && <a href={`${API_BASE}taxi/driver-profiles/${id}/documents.zip`} className={`${btn} border border-primary text-primary hover:bg-primary hover:text-primary-foreground transition-colors`}>DOWNLOAD DOCUMENTS (ZIP)</a>}
           <button onClick={removeDriver} className={`${btn} border border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground transition-colors`}>REMOVE</button>
         </div>
       </div>

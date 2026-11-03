@@ -52,7 +52,7 @@ function att_is_paid(PDO $pdo, int $empId, string $month): bool {
 // marks for a month: [employee_id => [day => status]]
 function att_month_marks(PDO $pdo, string $month): array {
     $st = $pdo->prepare('SELECT employee_id, att_date, status FROM attendance WHERE att_date >= ? AND att_date <= ?');
-    $st->execute([$month . '-01', $month . '-31']);
+    $st->execute([$month . '-01', date('Y-m-t', strtotime($month . '-01'))]);
     $out = [];
     foreach ($st->fetchAll() as $r) $out[(int) $r['employee_id']][(int) substr($r['att_date'], 8, 2)] = $r['status'];
     return $out;
