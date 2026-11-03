@@ -1,0 +1,9 @@
+{
+  "name": "The Pooja Group Management",
+  "short_name": "Pooja Mgmt",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F3E9D7",
+  "theme_color": "#C87412",
+  "icons": [{ "src": "/logo.png", "sizes": "any", "type": "image/png" }]
+}

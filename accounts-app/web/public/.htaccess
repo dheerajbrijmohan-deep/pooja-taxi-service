@@ -1,0 +1,10 @@
+RewriteEngine On
+# API requests go to PHP
+RewriteRule ^api/(.*)$ api/index.php [L,QSA]
+# Everything else that is not a real file goes to the React app
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^ index.html [L]
+Header set X-Robots-Tag "noindex, nofollow"
+Header set X-Frame-Options "DENY"
+Header set X-Content-Type-Options "nosniff"

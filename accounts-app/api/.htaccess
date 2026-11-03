@@ -1,0 +1,4 @@
+# Only index.php is reachable; other PHP files and SQL are blocked
+<FilesMatch "^(?!index\.php$).*\.(php|sql|md)$">
+  Require all denied
+</FilesMatch>

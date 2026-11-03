@@ -1,0 +1,12 @@
+node_modules/
+web/dist/
+api/config.php
+api/data/*.sqlite
+api/storage/*
+!api/storage/.htaccess
+.env
+api/data/import/
+*.sqlite
+*.xlsx
+api/bin/import-*.php
+api/data/
