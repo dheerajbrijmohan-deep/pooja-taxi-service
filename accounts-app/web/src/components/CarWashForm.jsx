@@ -86,7 +86,7 @@ export default function CarWashForm({ entry, services = [], onSaved, onClose }) 
           <div><L id="cw-model">Model</L><input id="cw-model" className={field} value={f.model} onChange={set("model")} placeholder="Swift Dzire" maxLength={100} /></div>
           <div><L id="cw-addr">Address</L><input id="cw-addr" className={field} value={f.address} onChange={set("address")} maxLength={255} /></div>
           <div><L id="cw-paid">Paid (₹)</L><input id="cw-paid" type="number" min="0" step="0.01" inputMode="decimal" className={field} value={f.paid} onChange={set("paid")} /></div>
-          <div><L id="cw-mode">Payment mode</L><select id="cw-mode" className={field} value={f.payment_mode ?? ""} onChange={set("payment_mode")}><option value="">Not paid yet</option>{PAYMENT_MODES.map((m) => <option key={m}>{m}</option>)}</select></div>
+          <div><L id="cw-mode">Payment mode</L><select id="cw-mode" className={field} value={f.payment_mode ?? ""} onChange={set("payment_mode")}><option value="">Not paid yet</option>{[...PAYMENT_MODES, ...(f.payment_mode && !PAYMENT_MODES.includes(f.payment_mode) ? [f.payment_mode] : [])].map((m) => <option key={m}>{m}</option>)}</select></div>
         </div>
         <p className="text-xs text-muted-foreground">“Due on” is filled in automatically: 15 days after the date.</p>
         {error && <p role="alert" className="text-sm text-destructive">{error}</p>}

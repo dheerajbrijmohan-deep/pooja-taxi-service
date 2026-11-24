@@ -34,7 +34,7 @@ function cw_vehicle(string $raw): string {
     return $c;
 }
 
-function cw_clean(array $in): array {
+function cw_clean(array $in, string $existingMode = ''): array {
     $date = trim((string) ($in['entry_date'] ?? ''));
     $name = trim((string) ($in['name'] ?? ''));
     $mobile = preg_replace('/[^0-9+]/', '', (string) ($in['mobile'] ?? ''));
@@ -54,7 +54,7 @@ function cw_clean(array $in): array {
     if (mb_strlen($vehicle) > 20) fail('Vehicle number is too long', 422);
     if ($service !== '' && !in_array($service, CARWASH_SERVICES, true)) fail('Choose a service from the list', 422);
     if (mb_strlen($address) > 255 || mb_strlen($model) > 100) fail('Address or model is too long', 422);
-    if (!in_array($mode, ['', 'Online', 'Cash', 'Credit', 'Complimentary'], true)) fail('Choose Online, Cash, Credit or Complimentary', 422);
+    if (!in_array($mode, ['', 'Online', 'Cash', 'Credit', 'Complimentary'], true) && !($mode === 'Membership' && $existingMode === 'Membership')) fail('Choose Online, Cash, Credit or Complimentary', 422);
     if (!in_array($type, ['Car', 'Bike', 'Auto'], true)) fail('Choose Car, Bike or Auto', 422);
     if (!is_numeric($paid) || $paid < 0 || $paid > 10000000) fail('Enter a valid paid amount', 422);
 
@@ -93,6 +93,7 @@ function cw_call_list(PDO $pdo): array {
 
 function carwash_route(string $method, string $path, array $user): void {
     $pdo = db();
+    if (str_starts_with($path, 'carwash/memberships') || str_starts_with($path, 'carwash/holidays')) membership_route($method, $path, $user);
 
     if ($method === 'GET' && $path === 'carwash/entries') {
         // optional date range (used by reports) lifts the 2,000-row cap of the everyday list
@@ -140,7 +141,7 @@ function carwash_route(string $method, string $path, array $user): void {
                 json_out(['entry' => cw_row($row->fetch())]);
             }
             if ($user['role'] !== 'admin' && $was !== '') fail('This entry is locked because its payment is recorded. Only the owner can change it.', 403);
-            [$date, $name, $mobile, $address, $model, $vehicle, $type, $service, $paid, $due, $mode] = cw_clean(body());
+            [$date, $name, $mobile, $address, $model, $vehicle, $type, $service, $paid, $due, $mode] = cw_clean(body(), (string) $was);
             $st = $pdo->prepare('UPDATE carwash_entries SET entry_date=?,name=?,mobile=?,address=?,model=?,vehicle_number=?,vehicle_type=?,service=?,paid=?,payment_mode=?,due_on=? WHERE id=?');
             $st->execute([$date, $name, $mobile, $address, $model, $vehicle, $type, $service, $paid, $mode, $due, $id]);
             $st = $pdo->prepare('SELECT * FROM carwash_entries WHERE id = ?');
@@ -180,7 +181,12 @@ function carwash_route(string $method, string $path, array $user): void {
             $st = $pdo->prepare("SELECT COUNT(*) AS cars, COALESCE(SUM(CASE WHEN payment_mode = 'Credit' THEN 0 ELSE paid END),0) AS earned, COALESCE(SUM(CASE WHEN payment_mode = 'Credit' THEN paid ELSE 0 END),0) AS credit FROM carwash_entries WHERE $where");
             $st->execute($args);
             $r = $st->fetch();
-            return ['cars' => (int) $r['cars'], 'earned' => (float) $r['earned'], 'credit' => (float) $r['credit']];
+            // membership passes count on the day they are sold (not cancelled); credit stays out of earnings, like entries
+            $mw = str_replace(['entry_date'], ['sold_on'], $where);
+            $ms = $pdo->prepare("SELECT COALESCE(SUM(CASE WHEN payment_mode = 'Credit' THEN 0 ELSE amount END),0) AS earned, COALESCE(SUM(CASE WHEN payment_mode = 'Credit' THEN amount ELSE 0 END),0) AS credit FROM carwash_memberships WHERE status <> 'Cancelled' AND $mw");
+            $ms->execute($args);
+            $m = $ms->fetch();
+            return ['cars' => (int) $r['cars'], 'earned' => (float) $r['earned'] + (float) $m['earned'], 'credit' => (float) $r['credit'] + (float) $m['credit']];
         };
 
         json_out([

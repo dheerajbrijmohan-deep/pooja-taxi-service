@@ -402,3 +402,38 @@ CREATE TABLE IF NOT EXISTS notifications (
   summary TEXT NOT NULL,
   is_read INTEGER NOT NULL DEFAULT 0
 );
+
+CREATE TABLE IF NOT EXISTS carwash_memberships (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  pass_no TEXT NOT NULL DEFAULT '',
+  name TEXT NOT NULL,
+  mobile TEXT NOT NULL,
+  vehicle_number TEXT NOT NULL,
+  model TEXT NOT NULL DEFAULT '',
+  vehicle_type TEXT NOT NULL,
+  plan TEXT NOT NULL,
+  washes_total INTEGER NOT NULL,
+  rate REAL NOT NULL,
+  amount REAL NOT NULL,
+  payment_mode TEXT NOT NULL,
+  sold_on TEXT NOT NULL,
+  start_date TEXT NOT NULL,
+  end_date TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'Active',
+  created_by INTEGER NULL,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE IF NOT EXISTS carwash_membership_washes (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  membership_id INTEGER NOT NULL,
+  wash_date TEXT NOT NULL,
+  entry_id INTEGER NULL,
+  created_by INTEGER NULL,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE (membership_id, wash_date)
+);
+CREATE TABLE IF NOT EXISTS public_holidays (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  holiday_date TEXT NOT NULL UNIQUE,
+  name TEXT NOT NULL
+);

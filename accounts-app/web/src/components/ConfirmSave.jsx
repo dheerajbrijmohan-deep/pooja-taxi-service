@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { Fragment, useEffect } from "react";
 
 // "Are you sure you want to save the changes?" - shows what is about to be saved. `locks` explains that a manager's save is final.
 export default function ConfirmSave({ rows = [], locks, busy, onConfirm, onCancel }) {
@@ -15,7 +15,7 @@ export default function ConfirmSave({ rows = [], locks, busy, onConfirm, onCance
         {locks && <p className="text-sm text-muted-foreground mb-4">Once saved, this is locked: only the admin can change or delete it afterwards.</p>}
         {rows.length > 0 && (
           <dl className="rounded-xl bg-muted/70 border border-border p-4 mb-5 grid grid-cols-[auto_1fr] gap-x-6 gap-y-1.5 text-sm">
-            {rows.map(([k, v]) => (<><dt key={`k${k}`} className="text-muted-foreground">{k}</dt><dd key={`v${k}`} className="text-right font-semibold">{v}</dd></>))}
+            {rows.map(([k, v]) => (<Fragment key={k}><dt className="text-muted-foreground">{k}</dt><dd className="text-right font-semibold">{v}</dd></Fragment>))}
           </dl>
         )}
         <div className="flex justify-end gap-3">

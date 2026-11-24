@@ -406,3 +406,42 @@ CREATE TABLE IF NOT EXISTS notifications (
   is_read TINYINT(1) NOT NULL DEFAULT 0,
   INDEX idx_notifications_read (is_read, id)
 );
+
+CREATE TABLE IF NOT EXISTS carwash_memberships (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  pass_no VARCHAR(12) NOT NULL DEFAULT '',
+  name VARCHAR(100) NOT NULL,
+  mobile VARCHAR(20) NOT NULL,
+  vehicle_number VARCHAR(20) NOT NULL,
+  model VARCHAR(100) NOT NULL DEFAULT '',
+  vehicle_type VARCHAR(10) NOT NULL,
+  plan VARCHAR(12) NOT NULL,
+  washes_total INT NOT NULL,
+  rate DECIMAL(10,2) NOT NULL,
+  amount DECIMAL(10,2) NOT NULL,
+  payment_mode VARCHAR(15) NOT NULL,
+  sold_on DATE NOT NULL,
+  start_date DATE NOT NULL,
+  end_date DATE NOT NULL,
+  status VARCHAR(10) NOT NULL DEFAULT 'Active',
+  created_by INT UNSIGNED NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_memberships_vehicle (vehicle_number),
+  INDEX idx_memberships_sold (sold_on)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS carwash_membership_washes (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  membership_id INT UNSIGNED NOT NULL,
+  wash_date DATE NOT NULL,
+  entry_id INT UNSIGNED NULL,
+  created_by INT UNSIGNED NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_membership_day (membership_id, wash_date)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS public_holidays (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  holiday_date DATE NOT NULL UNIQUE,
+  name VARCHAR(100) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

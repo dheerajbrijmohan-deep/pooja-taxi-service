@@ -32,6 +32,7 @@ export default function CarWash() {
   const { user } = useAuth();
   const [entries, setEntries] = useState(null);
   const [stats, setStats] = useState(null);
+  const [passes, setPasses] = useState([]);
   const [callData, setCallData] = useState(null);
   const [error, setError] = useState("");
   const [form, setForm] = useState(null); // null | {} (new) | entry (edit)
@@ -45,8 +46,9 @@ export default function CarWash() {
 
   const load = useCallback(async () => {
     try {
-      const [e, s, c] = await Promise.all([api("carwash/entries"), api("carwash/stats"), api("carwash/call-list")]);
+      const [e, s, c, m] = await Promise.all([api("carwash/entries"), api("carwash/stats"), api("carwash/call-list"), api("carwash/memberships")]);
       setEntries(e.entries);
+      setPasses(m.memberships);
       setStats(s);
       setCallData(c);
     } catch (err) {
@@ -91,7 +93,11 @@ export default function CarWash() {
     }
   };
 
-  const creditRows = (entries ?? []).filter((r) => r.payment_mode === "Credit").sort((a, b) => a.entry_date.localeCompare(b.entry_date));
+  const passCredit = passes.filter((m) => m.payment_mode === "Credit" && m.status !== "Cancelled")
+    .map((m) => ({ id: `p${m.id}`, pass_id: m.id, entry_date: m.sold_on, name: m.name, mobile: m.mobile, vehicle_number: m.vehicle_number, service: `${m.plan} pass`, paid: m.amount, payment_mode: "Credit" }));
+  const creditRows = [...(entries ?? []).filter((r) => r.payment_mode === "Credit"), ...passCredit].sort((a, b) => a.entry_date.localeCompare(b.entry_date));
+  // pass sales are income on the day they are sold: shown in the earning pies
+  const passRows = passes.filter((m) => m.status !== "Cancelled").map((m) => ({ entry_date: m.sold_on, vehicle_type: "Car", service: "Membership pass", payment_mode: m.payment_mode, paid: m.amount }));
   const lastOfMonth = (m) => { const [y, mo] = m.split("-").map(Number); return `${m}-${String(new Date(Date.UTC(y, mo, 0)).getUTCDate()).padStart(2, "0")}`; };
   const [rFrom, rTo] = view === "all" ? ["2020-01-01", today] : view === "month" ? [`${month}-01`, lastOfMonth(month)] : [day, day];
   const th = "text-left text-[10px] font-semibold tracking-wider text-muted-foreground px-2.5 py-3 whitespace-nowrap";
@@ -206,8 +212,8 @@ export default function CarWash() {
 
       {entries && (
         <div className="mb-8 grid grid-cols-1 xl:grid-cols-2 gap-4">
-          <SharePie rows={entries} today={today} title="EARNING PATTERN" subtitle="By vehicle type" dateOf={(e) => e.entry_date} keyOf={(e) => e.vehicle_type} amountOf={earned} emptyText="No paid entries in this period." />
-          <SharePie rows={entries} today={today} title="EARNING BY SERVICE" subtitle="Full Wash, Top Wash, Interior and more" dateOf={(e) => e.entry_date} keyOf={(e) => e.service || "Not specified"} amountOf={earned} emptyText="No paid entries in this period." />
+          <SharePie rows={[...entries, ...passRows]} today={today} title="EARNING PATTERN" subtitle="By vehicle type" dateOf={(e) => e.entry_date} keyOf={(e) => e.vehicle_type} amountOf={earned} emptyText="No paid entries in this period." />
+          <SharePie rows={[...entries, ...passRows]} today={today} title="EARNING BY SERVICE" subtitle="Full Wash, Top Wash, Interior and more" dateOf={(e) => e.entry_date} keyOf={(e) => e.service || "Not specified"} amountOf={earned} emptyText="No paid entries in this period." />
         </div>
       )}
       {entries && <div className="mb-8"><DailyBars rows={entries} today={today} dateOf={(e) => e.entry_date} title="VEHICLES PER DAY" unit="vehicles" singular="vehicle" /></div>}
@@ -273,7 +279,8 @@ export default function CarWash() {
           onConfirm={async () => {
             setSettling(true);
             try {
-              await api(`carwash/entries/${settle.entry.id}`, { method: "PUT", body: { ...settle.entry, payment_mode: settle.mode } });
+              if (settle.entry.pass_id) await api(`carwash/memberships/${settle.entry.pass_id}/received`, { method: "POST", body: { payment_mode: settle.mode } });
+              else await api(`carwash/entries/${settle.entry.id}`, { method: "PUT", body: { ...settle.entry, payment_mode: settle.mode } });
               setSettle(null);
               load();
             } catch (err) {

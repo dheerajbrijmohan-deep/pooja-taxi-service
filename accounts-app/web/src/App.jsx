@@ -3,6 +3,7 @@ import { homeFor, useAuth } from "./auth.jsx";
 import BusinessLayout, { Gate } from "./components/BusinessLayout.jsx";
 import Layout from "./components/Layout.jsx";
 import CarWash from "./pages/CarWash.jsx";
+import Memberships from "./pages/Memberships.jsx";
 import Expenses from "./pages/Expenses.jsx";
 import EmployeeDetail from "./pages/EmployeeDetail.jsx";
 import Employees from "./pages/Employees.jsx";
@@ -140,6 +141,7 @@ export default function App() {
         <Route path="account/:vehicleId" element={<Gate only="taxi"><TaxiAccount /></Gate>} />
         <Route path="drivers" element={<Gate only="taxi"><TaxiDrivers /></Gate>} />
         <Route path="drivers/:id" element={<Gate only="taxi"><TaxiDriverDetail /></Gate>} />
+        <Route path="memberships" element={<Gate roles={["admin", "manager"]} only="carwash"><Memberships /></Gate>} />
         <Route path="expenses" element={<Gate roles={["admin", "manager"]}><ExpensesHome /></Gate>} />
         <Route path="net-profit" element={<Gate only="taxi"><TaxiNetProfit /></Gate>} />
         <Route path="employees" element={<Gate only="carwash"><Employees /></Gate>} />

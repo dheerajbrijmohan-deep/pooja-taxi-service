@@ -249,6 +249,35 @@ export const REPORTS = [
     },
   },
   {
+    id: "memberships",
+    only: "carwash",
+    title: "Memberships sold",
+    blurb: "Passes sold in a date range, with plan, validity, washes used and amount.",
+    filters: [...dateRange, { key: "status", label: "Status", type: "select", options: [["", "All"], ["Active", "Active"], ["Expired", "Expired"], ["Used up", "Used up"], ["Cancelled", "Cancelled"]] }],
+    defaults: () => ({ from: monthStart(), to: todayIST(), status: "" }),
+    columns: () => [
+      { key: "sold_on", label: "Sold on", type: "date", on: true },
+      { key: "pass_no", label: "Pass no.", type: "text", on: true },
+      { key: "name", label: "Name", type: "text", on: true },
+      { key: "mobile", label: "Mobile", type: "text", on: true },
+      { key: "vehicle_number", label: "Vehicle no.", type: "text", on: true },
+      { key: "vehicle_type", label: "Type", type: "text", on: true },
+      { key: "plan", label: "Plan", type: "text", on: true },
+      { key: "start_date", label: "Starts", type: "date" },
+      { key: "end_date", label: "Ends", type: "date", on: true },
+      { key: "washes_used", label: "Washes used", type: "number", sum: true, on: true },
+      { key: "washes_total", label: "Washes", type: "number", sum: true },
+      { key: "payment_mode", label: "Payment mode", type: "text", on: true },
+      { key: "status", label: "Status", type: "text", on: true },
+      { key: "amount", label: "Amount", type: "money", sum: true, on: true },
+    ],
+    describe: (f) => join("AutoShine Premium Car Wash", range(f), pick("Status", f.status)),
+    load: async (f) => {
+      const d = await api("carwash/memberships");
+      return d.memberships.filter((m) => m.sold_on >= f.from && m.sold_on <= f.to && (!f.status || m.status === f.status)).reverse();
+    },
+  },
+  {
     id: "earnings",
     only: "carwash",
     title: "Car wash earnings summary",

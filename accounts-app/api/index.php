@@ -3,6 +3,7 @@ declare(strict_types=1);
 require __DIR__ . '/lib.php';
 require __DIR__ . '/carwash.php';
 require __DIR__ . '/notifications.php';
+require __DIR__ . '/memberships.php';
 require __DIR__ . '/planned.php';
 require __DIR__ . '/taxi.php';
 require __DIR__ . '/vehicles.php';

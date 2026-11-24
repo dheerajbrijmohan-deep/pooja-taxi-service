@@ -11,6 +11,7 @@ export const slugOf = (name) => BUSINESSES.find((b) => b.name === name)?.slug;
 // The tabs of a business workspace. `admin: true` = owner only; `only` = that business only.
 export const BUSINESS_TABS = [
   { path: "", label: "Dashboard", end: true },
+  { path: "memberships", label: "Memberships", only: "carwash" },
   { path: "vehicles", label: "Vehicles", only: "taxi" },
   { path: "earnings", label: "Earnings", only: "taxi" },
   { path: "drivers", label: "Drivers", only: "taxi", admin: true },

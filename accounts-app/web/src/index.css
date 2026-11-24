@@ -84,4 +84,11 @@
   body {
     background: #fff !important;
   }
+  /* membership card: only the card is printed */
+  body:has(.pass-print) * { visibility: hidden; }
+  body:has(.pass-print) .pass-print, body:has(.pass-print) .pass-print * { visibility: visible; }
+  .pass-print { position: absolute !important; inset: 0 auto auto 0 !important; background: #fff !important; padding: 0 !important; overflow: visible !important; }
+  .pass-print > div { box-shadow: none !important; border: 0 !important; padding: 0 !important; }
+  .pass-sheet { display: block !important; }
+  .pass-card { break-inside: avoid; margin: 0 0 6mm 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
