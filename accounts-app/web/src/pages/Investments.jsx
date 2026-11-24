@@ -44,6 +44,8 @@ export default function Investments() {
   const [open, setOpen] = useState({});          // loan id -> expanded
   const [q, setQ] = useState("");
   const [cat, setCat] = useState("");
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState("");
   const latest = useRef(0);
 
   const load = useCallback(async () => {
@@ -59,8 +61,8 @@ export default function Investments() {
 
   const rows = useMemo(() => {
     const t = q.trim().toLowerCase();
-    return (list ?? []).filter((r) => (!cat || r.category === cat) && (!t || [r.item, r.paid_to, r.category, r.notes, r.payment_mode].some((v) => v.toLowerCase().includes(t))));
-  }, [list, q, cat]);
+    return (list ?? []).filter((r) => (!cat || r.category === cat) && (!from || r.invest_date >= from) && (!to || r.invest_date <= to) && (!t || [r.item, r.paid_to, r.category, r.notes, r.payment_mode].some((v) => v.toLowerCase().includes(t))));
+  }, [list, q, cat, from, to]);
   const cats = useMemo(() => [...new Set((list ?? []).map((r) => r.category))].sort(), [list]);
   const shownTotal = rows.reduce((a, r) => a + r.amount, 0);
 
@@ -147,6 +149,11 @@ export default function Investments() {
         <div className="flex flex-wrap items-center justify-between gap-3 p-4 border-b border-border">
           <h2 className="text-xs font-semibold tracking-widest text-muted-foreground">INVESTMENTS {list && `(${rows.length})`}</h2>
           <div className="flex flex-wrap gap-3">
+            <label className="flex items-center gap-2 text-xs font-semibold tracking-wider text-muted-foreground">FROM
+              <input type="date" value={from} max={to || undefined} onChange={(e) => setFrom(e.target.value)} className={sel} aria-label="From date" /></label>
+            <label className="flex items-center gap-2 text-xs font-semibold tracking-wider text-muted-foreground">TO
+              <input type="date" value={to} min={from || undefined} onChange={(e) => setTo(e.target.value)} className={sel} aria-label="To date" /></label>
+            {(from || to) && <button onClick={() => { setFrom(""); setTo(""); }} className="text-xs font-bold tracking-wider text-primary hover:underline">ALL TIME</button>}
             <select value={cat} onChange={(e) => setCat(e.target.value)} className={sel} aria-label="Filter by category"><option value="">All categories</option>{cats.map((c) => <option key={c}>{c}</option>)}</select>
             <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search what, who…" aria-label="Search investments" className={`${sel} w-full sm:w-64`} />
           </div>

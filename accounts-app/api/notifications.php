@@ -21,10 +21,10 @@ function notify_text(PDO $pdo, string $method, string $path, array $in): ?string
 
     if ($path === 'carwash/entries' && $method === 'POST') {
         $pay = ($in['payment_mode'] ?? '') !== '' ? $inr($in['paid'] ?? 0) . ' ' . $in['payment_mode'] : 'not paid yet';
-        return 'added a car wash entry: ' . $join([$in['name'] ?? '', strtoupper((string) ($in['vehicle_number'] ?? '')), $in['service'] ?? '', $pay]);
+        return 'added a car wash entry: ' . $join([$in['name'] ?? '', cw_vehicle((string) ($in['vehicle_number'] ?? '')), $in['service'] ?? '', $pay]);
     }
-    if (str_starts_with($path, 'carwash/entries/')) return $verb . ' a car wash entry: ' . $join([$in['name'] ?? '', strtoupper((string) ($in['vehicle_number'] ?? '')), ($in['payment_mode'] ?? '') !== '' ? $in['payment_mode'] : '']);
-    if ($path === 'carwash/calls') return 'recorded a reminder call for ' . strtoupper((string) ($in['vehicle_number'] ?? ''));
+    if (str_starts_with($path, 'carwash/entries/')) return $verb . ' a car wash entry: ' . $join([$in['name'] ?? '', cw_vehicle((string) ($in['vehicle_number'] ?? '')), ($in['payment_mode'] ?? '') !== '' ? $in['payment_mode'] : '']);
+    if ($path === 'carwash/calls') return 'recorded a reminder call for ' . cw_vehicle((string) ($in['vehicle_number'] ?? ''));
     if ($path === 'taxi/trips' && $method === 'POST') return 'added a daily vehicle entry: ' . $join([$car($in['vehicle_id'] ?? null), $driver($in['driver_id'] ?? null), $in['trip_date'] ?? '']);
     if (str_starts_with($path, 'taxi/trips/')) return $verb . ' a daily vehicle entry';
     if ($path === 'taxi/expenses') return 'added a taxi expense: ' . $join([$car($in['vehicle_id'] ?? null), $in['category'] ?? '', $in['item'] ?? '', isset($in['amount']) ? $inr($in['amount']) : '']);

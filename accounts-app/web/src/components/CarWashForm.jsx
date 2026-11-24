@@ -1,4 +1,4 @@
-import { WASH_SERVICES, PAYMENT_MODES } from "../lib/carwash.js";
+import { WASH_SERVICES, PAYMENT_MODES, fmtVehicle } from "../lib/carwash.js";
 import { useEffect, useRef, useState } from "react";
 import { api } from "../api.js";
 import { useAuth } from "../auth.jsx";
@@ -69,7 +69,12 @@ export default function CarWashForm({ entry, services = [], onSaved, onClose }) 
           <div><L id="cw-date">Date</L><input id="cw-date" type="date" className={field} value={f.entry_date} onChange={set("entry_date")} required /></div>
           <div><L id="cw-name">Name</L><input id="cw-name" ref={first} className={field} value={f.name} onChange={set("name")} maxLength={100} /></div>
           <div><L id="cw-mobile">Mobile number</L><input id="cw-mobile" type="tel" inputMode="numeric" className={field} value={f.mobile} onChange={set("mobile")} placeholder="10 digits" /></div>
-          <div><L id="cw-veh">Vehicle number</L><input id="cw-veh" className={`${field} uppercase`} value={f.vehicle_number} onChange={set("vehicle_number")} placeholder="MP09AB1234" maxLength={20} /></div>
+          <div><L id="cw-veh">Vehicle number</L><input id="cw-veh" className={`${field} uppercase`} value={f.vehicle_number} onChange={(e) => setF((p) => {
+            let v = fmtVehicle(e.target.value);
+            // backspace over a hyphen or space would be put straight back: remove the character before it instead
+            if (e.target.value.length < p.vehicle_number.length && v === p.vehicle_number) v = fmtVehicle(v.replace(/[^A-Z0-9]/g, "").slice(0, -1));
+            return { ...p, vehicle_number: v };
+          })} placeholder="MH-31 FM-7700" maxLength={20} /></div>
           <div><L id="cw-type">Type</L><select id="cw-type" className={field} value={f.vehicle_type} onChange={set("vehicle_type")}><option>Car</option><option>Bike</option><option>Auto</option></select></div>
           <div>
             <L id="cw-service">Service</L>

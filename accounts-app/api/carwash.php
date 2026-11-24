@@ -27,11 +27,18 @@ function cw_valid_date(string $d): bool {
     return $dt !== false && $dt->format('Y-m-d') === $d;
 }
 
+// MH31FM7700 -> MH-31 FM-7700. Numbers that do not fit that shape are kept as given, in capitals and without spaces.
+function cw_vehicle(string $raw): string {
+    $c = strtoupper(preg_replace('/[^A-Za-z0-9]/', '', $raw));
+    if (preg_match('/^([A-Z]{2})([0-9]{1,2})([A-Z]{1,3})([0-9]{1,4})$/', $c, $m)) return "$m[1]-$m[2] $m[3]-$m[4]";
+    return $c;
+}
+
 function cw_clean(array $in): array {
     $date = trim((string) ($in['entry_date'] ?? ''));
     $name = trim((string) ($in['name'] ?? ''));
     $mobile = preg_replace('/[^0-9+]/', '', (string) ($in['mobile'] ?? ''));
-    $vehicle = strtoupper(preg_replace('/\s+/', '', (string) ($in['vehicle_number'] ?? '')));
+    $vehicle = cw_vehicle((string) ($in['vehicle_number'] ?? ''));
     $address = trim((string) ($in['address'] ?? ''));
     $model = trim((string) ($in['model'] ?? ''));
     $type = (string) ($in['vehicle_type'] ?? 'Car');
@@ -155,7 +162,7 @@ function carwash_route(string $method, string $path, array $user): void {
 
     if ($method === 'POST' && $path === 'carwash/calls') {
         $in = body();
-        $vehicle = strtoupper(preg_replace('/\s+/', '', (string) ($in['vehicle_number'] ?? '')));
+        $vehicle = cw_vehicle((string) ($in['vehicle_number'] ?? ''));
         $comment = trim((string) ($in['comment'] ?? ''));
         if ($comment === '' || mb_strlen($comment) > 500) fail('Write a comment (up to 500 characters)', 422);
         $st = $pdo->prepare('SELECT COUNT(*) FROM carwash_entries WHERE vehicle_number = ?');

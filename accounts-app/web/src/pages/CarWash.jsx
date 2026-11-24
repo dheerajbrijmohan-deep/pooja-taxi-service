@@ -40,7 +40,7 @@ export default function CarWash() {
   const [creditOpen, setCreditOpen] = useState(false);
   const [settle, setSettle] = useState(null); // { entry, mode } while recording that a credit was received
   const [settling, setSettling] = useState(false);
-  const [view, setView] = useState("month"); // day | month | all
+  const [view, setView] = useState("day"); // day | month | all
   const [month, setMonth] = useState(todayIST().slice(0, 7));
 
   const load = useCallback(async () => {
@@ -69,7 +69,8 @@ export default function CarWash() {
     if (!entries) return [];
     if (searching) {
       const t = q.trim().toLowerCase();
-      return entries.filter((r) => [r.name, r.mobile, r.vehicle_number, r.vehicle_type, r.service, r.model, r.address, r.payment_mode].some((v) => v.toLowerCase().includes(t)));
+      const tc = t.replace(/[\s-]/g, ""); // "mh31" also finds MH-31 FM-7700
+      return entries.filter((r) => [r.name, r.mobile, r.vehicle_number, r.vehicle_type, r.service, r.model, r.address, r.payment_mode].some((v) => v.toLowerCase().includes(t)) || (tc && r.vehicle_number.toLowerCase().replace(/[\s-]/g, "").includes(tc)));
     }
     if (view === "all") return entries;
     if (view === "month") return entries.filter((r) => r.entry_date.startsWith(month));
@@ -93,7 +94,6 @@ export default function CarWash() {
   const creditRows = (entries ?? []).filter((r) => r.payment_mode === "Credit").sort((a, b) => a.entry_date.localeCompare(b.entry_date));
   const lastOfMonth = (m) => { const [y, mo] = m.split("-").map(Number); return `${m}-${String(new Date(Date.UTC(y, mo, 0)).getUTCDate()).padStart(2, "0")}`; };
   const [rFrom, rTo] = view === "all" ? ["2020-01-01", today] : view === "month" ? [`${month}-01`, lastOfMonth(month)] : [day, day];
-  const avg = stats && stats.month.cars ? stats.month.earned / stats.month.cars : 0;
   const th = "text-left text-[10px] font-semibold tracking-wider text-muted-foreground px-2.5 py-3 whitespace-nowrap";
   const td = "px-2.5 py-2.5 align-top text-[13px]";
   const dayBtn = "w-9 h-9 rounded-full border border-border font-bold hover:bg-muted disabled:opacity-40";
@@ -113,27 +113,17 @@ export default function CarWash() {
       {error && <p role="alert" className="text-sm text-destructive mb-4">{error}</p>}
 
       {stats && (
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           <Stat label="TODAY'S EARNING" value={money(stats.day.earned)} sub={`${plural(stats.day.cars, "vehicle")} today`} />
           <Stat label="THIS MONTH" value={money(stats.month.earned)} sub={plural(stats.month.cars, "vehicle")} />
           <button type="button" onClick={() => setCreditOpen(true)} className="text-left rounded-2xl hover:ring-2 hover:ring-primary/50 focus:outline-none focus:ring-2 focus:ring-primary" aria-label="Show who owes the credit">
             <Stat label="CREDIT (NOT RECEIVED)" value={money(stats.all.credit)} sub="all time · click to see who owes" />
           </button>
-          <Stat label="AVG PER VEHICLE" value={money(avg)} sub="this month" />
           <Stat label="TO CALL" value={stats.to_call} sub="customers due for a reminder" />
         </div>
       )}
 
-      {entries && (
-        <div className="mb-8">
-          <SharePie rows={entries} today={today} title="EARNING PATTERN" subtitle="Paid amount by type" dateOf={(e) => e.entry_date} keyOf={(e) => e.vehicle_type} amountOf={earned} emptyText="No paid entries in this period." />
-        </div>
-      )}
-      {entries && <div className="mb-8"><DailyBars rows={entries} today={today} dateOf={(e) => e.entry_date} title="VEHICLES PER DAY" unit="vehicles" singular="vehicle" /></div>}
-
-      <div className="mb-8"><CallList data={callData} today={today} onChanged={load} /></div>
-
-      <div id="entries" className="bg-card rounded-2xl shadow-card border border-border overflow-hidden">
+      <div id="entries" className="mb-8 bg-card rounded-2xl shadow-card border border-border overflow-hidden">
         <div className="flex flex-wrap items-center justify-between gap-3 p-4 border-b border-border">
           <div className="flex items-center gap-2">
             <h2 className="text-xs font-semibold tracking-widest text-muted-foreground mr-2">{searching ? "SEARCH RESULTS" : "ENTRIES FOR"}</h2>
@@ -213,6 +203,16 @@ export default function CarWash() {
           </table>
         </div>
       </div>
+
+      {entries && (
+        <div className="mb-8 grid grid-cols-1 xl:grid-cols-2 gap-4">
+          <SharePie rows={entries} today={today} title="EARNING PATTERN" subtitle="By vehicle type" dateOf={(e) => e.entry_date} keyOf={(e) => e.vehicle_type} amountOf={earned} emptyText="No paid entries in this period." />
+          <SharePie rows={entries} today={today} title="EARNING BY SERVICE" subtitle="Full Wash, Top Wash, Interior and more" dateOf={(e) => e.entry_date} keyOf={(e) => e.service || "Not specified"} amountOf={earned} emptyText="No paid entries in this period." />
+        </div>
+      )}
+      {entries && <div className="mb-8"><DailyBars rows={entries} today={today} dateOf={(e) => e.entry_date} title="VEHICLES PER DAY" unit="vehicles" singular="vehicle" /></div>}
+
+      <div className="mb-8"><CallList data={callData} today={today} onChanged={load} /></div>
 
       {creditOpen && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-start md:items-center justify-center p-4 overflow-y-auto" onMouseDown={(e) => e.target === e.currentTarget && setCreditOpen(false)}>

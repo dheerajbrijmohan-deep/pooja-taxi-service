@@ -16,7 +16,7 @@ const KINDS = {
     id: (c) => c.vehicle_number,
     body: (c) => ({ vehicle_number: c.vehicle_number }),
     since: "Last wash", visited: "washed", next: "Next wash due on", who: "customers",
-    title: (c) => c.name, tag: (c) => c.vehicle_number,
+    title: (c) => c.name || c.vehicle_number || c.mobile, tag: (c) => c.vehicle_number,
     detail: (c) => [c.vehicle_type, c.service, c.model].filter(Boolean).join(" · "),
     hint: "e.g. Will bring the car on Saturday / Not picking up / Asked to call next week",
   },
@@ -85,7 +85,9 @@ function CommentModal({ c, k, onClose, onSaved }) {
 export default function CallList({ data, today, onChanged, kind = "carwash" }) {
   const k = KINDS[kind];
   const [open, setOpen] = useState(null);
+  const [all, setAll] = useState(false);
   const customers = data?.customers ?? [];
+  const shown = all ? customers : customers.slice(0, 5);
 
   return (
     <div className="bg-card rounded-2xl shadow-card border border-border overflow-hidden">
@@ -99,7 +101,7 @@ export default function CallList({ data, today, onChanged, kind = "carwash" }) {
         <p className="p-8 text-center text-muted-foreground">No one to call right now. 🎉</p>
       ) : (
         <ul className="divide-y divide-border">
-          {customers.map((c) => {
+          {shown.map((c) => {
             const since = daysBetween(c.entry_date, today);
             const st = status(since, data.due_days);
             const last = c.calls[0];
@@ -121,6 +123,13 @@ export default function CallList({ data, today, onChanged, kind = "carwash" }) {
             );
           })}
         </ul>
+      )}
+      {customers.length > 5 && (
+        <div className="p-3 border-t border-border text-center">
+          <button onClick={() => setAll((v) => !v)} className="px-5 py-2 rounded-full border border-primary text-primary font-bold text-xs tracking-wider hover:bg-primary hover:text-primary-foreground">
+            {all ? "SHOW LESS" : `SHOW MORE (${customers.length - 5} more)`}
+          </button>
+        </div>
       )}
       {open && <CommentModal c={open} k={k} onClose={() => setOpen(null)} onSaved={() => { setOpen(null); onChanged(); }} />}
     </div>
