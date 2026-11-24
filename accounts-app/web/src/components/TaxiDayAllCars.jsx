@@ -90,6 +90,7 @@ export default function TaxiDayAllCars({ tick, onOpen, onDownload, busy }) {
                   <td className="px-2.5 py-2.5 whitespace-nowrap text-muted-foreground">{none ? "No entry yet" : r.on_leave ? "Leave" : !r.total_earning ? "in progress" : r.status}</td>
                   <td className="px-2.5 py-2.5 whitespace-nowrap text-center">
                     {!none && user.role === "admin" && <button onClick={() => open({ r, c })} className="text-xs font-bold tracking-wider text-primary hover:underline">EDIT</button>}
+                    {!none && user.role !== "admin" && <span className="text-xs font-bold tracking-wider text-muted-foreground" title="Saved entries can only be changed by the admin">🔒 LOCKED</span>}
                     {none && day <= today && <button onClick={() => open({ r, c })} className="text-xs font-bold tracking-wider text-primary hover:underline">ADD</button>}
                   </td>
                 </tr>

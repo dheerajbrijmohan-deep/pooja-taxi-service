@@ -435,7 +435,7 @@ function taxi_route(string $method, string $path, array $user): void {
         $b = body();
         $v = taxi_trip_clean($pdo, $b);
         $dup = $pdo->prepare('SELECT 1 FROM taxi_trips WHERE driver_id = ? AND trip_date = ?'); $dup->execute([$v[1], $v[0]]);
-        if ($dup->fetch()) fail('This driver already has an entry for that day. Edit it instead.', 409);
+        if ($dup->fetch()) fail($admin ? 'This driver already has an entry for that day. Edit it instead.' : 'An entry for this driver on that day is already saved and locked. Ask the admin to change it.', 409);
         $pdo->prepare("INSERT INTO taxi_trips ($cols,created_by) VALUES (" . implode(',', array_fill(0, 23, '?')) . ')')->execute([...$v, $user['id']]);
         $newId = (int) $pdo->lastInsertId();
         taxi_set_day_advance($pdo, (int) $v[1], $v[0], $b, (int) $user['id']);

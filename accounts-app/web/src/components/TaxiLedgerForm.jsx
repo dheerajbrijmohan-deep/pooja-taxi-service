@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { api } from "../api.js";
-import { todayIST } from "../lib/format.js";
+import { fmtDate, money, todayIST } from "../lib/format.js";
+import ConfirmSave from "./ConfirmSave.jsx";
 
 const field =
   "w-full rounded-md border border-input bg-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary";
@@ -10,6 +11,7 @@ export default function TaxiLedgerForm({ entry, drivers, vehicles, isAdmin, onSa
   const [f, setF] = useState(entry
     ? { ...entry, driver_id: String(entry.driver_id), vehicle_id: entry.vehicle_id == null ? "" : String(entry.vehicle_id), amount: String(entry.amount) }
     : { entry_date: todayIST(), driver_id: String(drivers[0]?.id ?? ""), kind: "Advance", amount: "", vehicle_id: "", note: "" });
+  const [confirming, setConfirming] = useState(false);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const first = useRef(null);
@@ -21,15 +23,15 @@ export default function TaxiLedgerForm({ entry, drivers, vehicles, isAdmin, onSa
   }, [onClose]);
   const set = (k) => (e) => setF((p) => ({ ...p, [k]: e.target.value }));
 
-  const submit = async (e) => {
-    e.preventDefault();
-    setError("");
+  const submit = (e) => { e.preventDefault(); setError(""); setConfirming(true); };
+  const save = async () => {
     setBusy(true);
     try {
       const body = { ...f, amount: Number(f.amount) };
       const d = entry ? await api(`taxi/ledger/${entry.id}`, { method: "PUT", body }) : await api("taxi/ledger", { method: "POST", body });
       onSaved(d.entry);
     } catch (err) {
+      setConfirming(false);
       setError(err.message);
     } finally {
       setBusy(false);
@@ -73,6 +75,9 @@ export default function TaxiLedgerForm({ entry, drivers, vehicles, isAdmin, onSa
           <button type="submit" disabled={busy} className="px-6 py-2.5 rounded-full bg-primary text-primary-foreground font-bold text-sm tracking-wider hover:opacity-90 disabled:opacity-60">{busy ? "SAVING…" : "SAVE"}</button>
         </div>
       </form>
+      {confirming && <ConfirmSave locks={!isAdmin && !entry} busy={busy} onConfirm={save} onCancel={() => setConfirming(false)}
+        rows={[["Date", fmtDate(f.entry_date)], ["Driver", drivers.find((d) => String(d.id) === f.driver_id)?.name ?? ""], ["Type", f.kind], ["Amount", money(Number(f.amount) || 0)],
+               ...(f.kind === "Damage" && f.vehicle_id ? [["Car", vehicles.find((v) => String(v.id) === f.vehicle_id)?.code.slice(-4) ?? ""]] : []), ...(f.note ? [["Note", f.note]] : [])]} />}
     </div>
   );
 }

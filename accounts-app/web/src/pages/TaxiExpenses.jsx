@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { api } from "../api.js";
 import { useAuth } from "../auth.jsx";
+import ConfirmSave from "../components/ConfirmSave.jsx";
 import DateInput from "../components/DateInput.jsx";
 import { fmtDate, todayIST } from "../lib/format.js";
 
@@ -15,6 +16,8 @@ function ExpenseForm({ expense, cars, defaultCar, categories, onClose, onSaved }
   const [f, setF] = useState(expense
     ? { expense_date: expense.date, vehicle_id: String(expense.vehicle_id), category: expense.category, item: expense.item, amount: String(expense.amount) }
     : { expense_date: todayIST(), vehicle_id: String(defaultCar || cars[0]?.id || ""), category: categories[0], item: "", amount: "" });
+  const { user } = useAuth();
+  const [confirming, setConfirming] = useState(false);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   useEffect(() => {
@@ -23,9 +26,8 @@ function ExpenseForm({ expense, cars, defaultCar, categories, onClose, onSaved }
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
   const set = (k) => (e) => setF((p) => ({ ...p, [k]: e.target.value }));
-  const submit = async (e) => {
-    e.preventDefault();
-    setError("");
+  const submit = (e) => { e.preventDefault(); setError(""); setConfirming(true); };
+  const save = async () => {
     setBusy(true);
     try {
       const body = { ...f, vehicle_id: Number(f.vehicle_id), amount: f.amount === "" ? null : Number(f.amount) };
@@ -33,11 +35,13 @@ function ExpenseForm({ expense, cars, defaultCar, categories, onClose, onSaved }
       else await api("taxi/expenses", { method: "POST", body });
       onSaved(f.expense_date.slice(0, 7));
     } catch (err) {
+      setConfirming(false);
       setError(err.message);
     } finally {
       setBusy(false);
     }
   };
+  const carName = cars.find((c) => String(c.id) === f.vehicle_id)?.code.slice(-4) ?? "";
   const L = ({ id, children }) => <label htmlFor={id} className="text-sm font-semibold mb-1 block">{children}</label>;
   return (
     <div className="fixed inset-0 z-50 bg-black/50 flex items-start md:items-center justify-center p-4 overflow-y-auto" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
@@ -67,6 +71,8 @@ function ExpenseForm({ expense, cars, defaultCar, categories, onClose, onSaved }
           <button type="submit" disabled={busy} className="px-8 py-3 rounded-full bg-primary text-primary-foreground font-bold text-sm tracking-wider hover:opacity-90 disabled:opacity-60">{busy ? "SAVING…" : "SAVE"}</button>
         </div>
       </form>
+      {confirming && <ConfirmSave locks={user.role !== "admin" && !expense} busy={busy} onConfirm={save} onCancel={() => setConfirming(false)}
+        rows={[["Date", fmtDate(f.expense_date)], ["Car", carName], ["Expense", f.category], ["Details", f.item || "—"], ["Amount", `₹${num(f.amount)}`]]} />}
     </div>
   );
 }
@@ -134,19 +140,19 @@ export default function TaxiExpenses() {
 
       <div className="bg-card rounded-2xl shadow-card border border-border overflow-x-auto">
         <table className="text-sm min-w-full">
-          <thead className="bg-muted"><tr>{["Date", "Car", "Expense", "Details", "Amount (₹)"].map((h) => <th key={h} className={th}>{h.toUpperCase()}</th>)}{isAdmin && <th className={th}>ACTION</th>}</tr></thead>
+          <thead className="bg-muted"><tr>{["Date", "Car", "Expense", "Details", "Amount (₹)"].map((h) => <th key={h} className={th}>{h.toUpperCase()}</th>)}<th className={th}>ACTION</th></tr></thead>
           <tbody className="divide-y divide-border">
             {rows.map((e) => (
               <tr key={e.id}>
                 <td className={td}>{fmtDate(e.date, false)}</td><td className={`${td} font-semibold`}>{e.car_code.slice(-4)}</td><td className={td}>{e.category}</td>
                 <td className={`${td} whitespace-normal max-w-xs`}>{e.item || "—"}</td><td className={`${td} font-semibold`}>{num(e.amount)}</td>
-                {isAdmin && <td className={td}><button onClick={() => setForm(e)} className="text-xs font-bold tracking-wider text-primary hover:underline">EDIT</button><button onClick={() => del(e)} className="ml-4 text-xs font-bold tracking-wider text-destructive hover:underline">DELETE</button></td>}
+                <td className={td}>{!isAdmin && <span className="text-xs font-bold tracking-wider text-muted-foreground" title="Saved expenses can only be changed by the admin">🔒 LOCKED</span>}{isAdmin && <><button onClick={() => setForm(e)} className="text-xs font-bold tracking-wider text-primary hover:underline">EDIT</button><button onClick={() => del(e)} className="ml-4 text-xs font-bold tracking-wider text-destructive hover:underline">DELETE</button></>}</td>
               </tr>
             ))}
-            {data && rows.length === 0 && <tr><td colSpan={isAdmin ? 6 : 5} className="px-4 py-10 text-center text-muted-foreground">No expenses recorded for {monthName(month)}{carId ? " on this car" : ""}.</td></tr>}
+            {data && rows.length === 0 && <tr><td colSpan={6} className="px-4 py-10 text-center text-muted-foreground">No expenses recorded for {monthName(month)}{carId ? " on this car" : ""}.</td></tr>}
             {!data && !error && <tr><td colSpan={6} className="px-4 py-10 text-center text-muted-foreground">Loading…</td></tr>}
           </tbody>
-          {rows.length > 0 && <tfoot className="bg-muted font-bold"><tr><td className={td} colSpan={4}>TOTAL</td><td className={td}>{num(rows.reduce((a, e) => a + e.amount, 0))}</td>{isAdmin && <td />}</tr></tfoot>}
+          {rows.length > 0 && <tfoot className="bg-muted font-bold"><tr><td className={td} colSpan={4}>TOTAL</td><td className={td}>{num(rows.reduce((a, e) => a + e.amount, 0))}</td><td /></tr></tfoot>}
         </table>
       </div>
 

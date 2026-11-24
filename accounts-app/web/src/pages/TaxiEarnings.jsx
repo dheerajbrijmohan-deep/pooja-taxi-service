@@ -184,7 +184,7 @@ export default function TaxiEarnings() {
             <thead className="bg-muted">
               <tr>
                 {cols.map((c) => <th key={c.h} className={`text-[11px] font-semibold tracking-widest text-muted-foreground px-2.5 py-3 whitespace-nowrap text-center`}>{c.h.toUpperCase()}</th>)}
-                {isAdmin && <th className="sticky right-0 bg-muted px-2.5 py-3 text-[11px] font-semibold tracking-widest text-muted-foreground text-center shadow-[-6px_0_8px_-6px_rgba(0,0,0,0.15)]">ACTION</th>}
+                <th className="sticky right-0 bg-muted px-2.5 py-3 text-[11px] font-semibold tracking-widest text-muted-foreground text-center shadow-[-6px_0_8px_-6px_rgba(0,0,0,0.15)]">ACTION</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -193,11 +193,12 @@ export default function TaxiEarnings() {
                 return (
                   <tr key={`${r.date}-${ri}`} className={`${future ? "opacity-40" : ""} ${r.on_leave ? "bg-amber-100 text-amber-900" : ""}`}>
                     {cols.map((c) => <td key={c.h} className={`${cell(c.c)} ${c.c.includes("gain") && r.gain < 0 ? "text-destructive" : ""}`}>{c.get(r)}</td>)}
-                    {isAdmin && <td className={`sticky right-0 ${r.on_leave ? "bg-amber-100" : "bg-card"} px-3 py-2 whitespace-nowrap text-center shadow-[-6px_0_8px_-6px_rgba(0,0,0,0.15)]`} onClick={(e) => e.stopPropagation()}>
-                      {r.trip_id && <button onClick={() => openRow(r)} className="text-xs font-bold tracking-wider text-primary hover:underline">EDIT</button>}
+                    <td className={`sticky right-0 ${r.on_leave ? "bg-amber-100" : "bg-card"} px-3 py-2 whitespace-nowrap text-center shadow-[-6px_0_8px_-6px_rgba(0,0,0,0.15)]`} onClick={(e) => e.stopPropagation()}>
+                      {isAdmin && r.trip_id && <button onClick={() => openRow(r)} className="text-xs font-bold tracking-wider text-primary hover:underline">EDIT</button>}
+                      {!isAdmin && r.trip_id && <span className="text-xs font-bold tracking-wider text-muted-foreground" title="Saved entries can only be changed by the admin">🔒 LOCKED</span>}
                       {!r.trip_id && !future && <button onClick={() => openRow(r)} className="text-xs font-bold tracking-wider text-primary hover:underline">ADD</button>}
                       {isAdmin && r.trip_id && <button onClick={() => del(r)} className="ml-3 text-xs font-bold tracking-wider text-destructive hover:underline">DELETE</button>}
-                    </td>}
+                    </td>
                   </tr>
                 );
               })}
@@ -207,7 +208,7 @@ export default function TaxiEarnings() {
               <tfoot className="bg-muted font-bold">
                 <tr>
                   {cols.map((c, ci) => <td key={c.h} className={`px-2.5 py-3 whitespace-nowrap text-center ${c.c.includes("gain") && t.gain < 0 ? "text-destructive" : ""}`}>{ci === 0 ? "TOTAL" : c.tot ? c.tot(t) : ""}</td>)}
-                  {isAdmin && <td className="sticky right-0 bg-muted" />}
+                  <td className="sticky right-0 bg-muted" />
                 </tr>
               </tfoot>
             )}

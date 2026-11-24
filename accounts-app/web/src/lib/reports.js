@@ -239,7 +239,8 @@ export const REPORTS = [
       { key: "vehicle_type", label: "Type", type: "text", on: true },
       { key: "service", label: "Service", type: "text", on: true },
       { key: "due_on", label: "Next wash due", type: "date" },
-      { key: "paid", label: "Paid", type: "money", sum: true, on: true },
+      { key: "payment_mode", label: "Payment mode", type: "text", on: true },
+      { key: "paid", label: "Amount", type: "money", sum: true, on: true },
     ],
     describe: (f) => join("AutoShine Premium Car Wash", range(f), pick("Type", f.type)),
     load: async (f) => {
@@ -260,7 +261,8 @@ export const REPORTS = [
       { key: "cars", label: "Cars", type: "number", sum: true, on: true },
       { key: "bikes", label: "Bikes", type: "number", sum: true, on: true },
       { key: "autos", label: "Autos", type: "number", sum: true, on: true },
-      { key: "paid", label: "Paid", type: "money", sum: true, on: true },
+      { key: "paid", label: "Earned (excl. credit)", type: "money", sum: true, on: true },
+      { key: "credit", label: "On credit", type: "money", sum: true, on: true },
     ],
     describe: (f) => join("AutoShine Premium Car Wash", range(f), `By ${f.by}`),
     load: async (f) => {
@@ -268,10 +270,10 @@ export const REPORTS = [
       const groups = {};
       d.entries.forEach((e) => {
         const key = f.by === "month" ? e.entry_date.slice(0, 7) : e.entry_date;
-        const g = (groups[key] ??= { period: f.by === "month" ? monthName(key) : key, sort: key, vehicles: 0, cars: 0, bikes: 0, autos: 0, paid: 0 });
+        const g = (groups[key] ??= { period: f.by === "month" ? monthName(key) : key, sort: key, vehicles: 0, cars: 0, bikes: 0, autos: 0, paid: 0, credit: 0 });
         g.vehicles++;
         g[{ Car: "cars", Bike: "bikes", Auto: "autos" }[e.vehicle_type]]++;
-        g.paid += e.paid;
+        if (e.payment_mode === "Credit") g.credit += e.paid; else g.paid += e.paid;
       });
       return Object.values(groups).sort((a, b) => a.sort.localeCompare(b.sort));
     },

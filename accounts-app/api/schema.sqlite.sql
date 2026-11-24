@@ -27,6 +27,7 @@ CREATE TABLE IF NOT EXISTS carwash_entries (
   vehicle_type TEXT NOT NULL DEFAULT 'Car',
   service TEXT NOT NULL DEFAULT '',
   paid REAL NOT NULL DEFAULT 0,
+  payment_mode TEXT NOT NULL DEFAULT '',
   due_on TEXT NOT NULL,
   created_by INTEGER NULL,
   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -393,3 +394,11 @@ CREATE TABLE IF NOT EXISTS taxi_owner_dues (
   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 CREATE INDEX IF NOT EXISTS idx_tdues_vehicle ON taxi_owner_dues (vehicle_id, status);
+
+CREATE TABLE IF NOT EXISTS notifications (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  created_at TEXT NOT NULL,
+  actor_name TEXT NOT NULL,
+  summary TEXT NOT NULL,
+  is_read INTEGER NOT NULL DEFAULT 0
+);

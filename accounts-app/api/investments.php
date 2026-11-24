@@ -89,7 +89,7 @@ function inv_income(PDO $pdo, string $business): array {
         $st->execute($args);
         return array_column($st->fetchAll(), 'v', 'm');
     };
-    if ($business === 'AutoShine Premium Car Wash') return array_map('floatval', $q('SELECT SUBSTR(entry_date,1,7) AS m, SUM(paid) AS v FROM carwash_entries GROUP BY SUBSTR(entry_date,1,7)'));
+    if ($business === 'AutoShine Premium Car Wash') return array_map('floatval', $q('SELECT SUBSTR(entry_date,1,7) AS m, SUM(CASE WHEN payment_mode = \'Credit\' THEN 0 ELSE paid END) AS v FROM carwash_entries GROUP BY SUBSTR(entry_date,1,7)'));
     return taxi_income_by_month($pdo);
 }
 

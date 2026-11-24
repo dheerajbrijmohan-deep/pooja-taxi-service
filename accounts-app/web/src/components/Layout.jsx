@@ -1,11 +1,15 @@
+import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { homeFor, useAuth } from "../auth.jsx";
+import ChangePassword from "./ChangePassword.jsx";
+import NotificationBell from "./NotificationBell.jsx";
 import { BUSINESSES } from "../lib/businesses.js";
 
 export default function Layout({ children }) {
   const { user, logout } = useAuth();
   const { pathname } = useLocation();
   const navigate = useNavigate();
+  const [pwOpen, setPwOpen] = useState(false);
 
   const home = homeFor(user);
   const links = [
@@ -21,6 +25,7 @@ export default function Layout({ children }) {
           <div className="text-base font-bold text-primary tracking-wider whitespace-nowrap">THE POOJA GROUP</div>
           <div className="text-xs font-semibold tracking-wider text-sidebar-foreground">MANAGEMENT</div>
         </Link>
+        {user.role === "admin" && <NotificationBell />}
         <nav className="flex flex-wrap md:flex-nowrap md:flex-col gap-1.5 md:gap-2 order-3 md:order-none w-full md:w-auto">
           {links.map((l) => (
             <Link
@@ -38,6 +43,9 @@ export default function Layout({ children }) {
           <div className="opacity-70 mb-2 hidden md:block">
             {user.name} · {user.role}
           </div>
+          <button type="button" onClick={() => setPwOpen(true)} className="block mb-2 font-bold tracking-wider text-white/70 hover:text-white underline-offset-4 hover:underline">
+            CHANGE PASSWORD
+          </button>
           <button
             type="button"
             onClick={async () => {
@@ -50,6 +58,7 @@ export default function Layout({ children }) {
           </button>
         </div>
       </aside>
+      {pwOpen && <ChangePassword onClose={() => setPwOpen(false)} />}
       <main className="flex-1 min-w-0 p-5 md:p-10 print:p-0">
         {children}
       </main>

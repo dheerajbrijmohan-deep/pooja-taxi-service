@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 const CARWASH_DUE_DAYS = 15;   // next wash is due this many days after a wash
+const CARWASH_SERVICES = ['Full Wash', 'Top Wash', 'Water Spray', 'Interior Vacuum', 'Interior Deep Clean', 'Wax Polish', 'Glass Clean'];
 const CARWASH_CALL_AFTER = 12; // customers appear on the caller's list this many days after their last wash
 
 function cw_row(array $r): array {
@@ -16,6 +17,7 @@ function cw_row(array $r): array {
         'vehicle_type' => $r['vehicle_type'],
         'service' => $r['service'],
         'paid' => (float) $r['paid'],
+        'payment_mode' => $r['payment_mode'] ?? '',
         'due_on' => $r['due_on'],
     ];
 }
@@ -35,18 +37,26 @@ function cw_clean(array $in): array {
     $type = (string) ($in['vehicle_type'] ?? 'Car');
     $service = trim((string) ($in['service'] ?? ''));
     $paid = $in['paid'] ?? 0;
+    $mode = trim((string) ($in['payment_mode'] ?? ''));
+    if (is_string($paid) && trim($paid) === '') $paid = 0;
 
     if (!cw_valid_date($date)) fail('Enter a valid date', 422);
-    if ($name === '' || mb_strlen($name) > 100) fail('Enter the customer name', 422);
-    if (!preg_match('/^(\+91)?[0-9]{10}$/', $mobile)) fail('Enter a valid 10-digit mobile number', 422);
-    if ($vehicle === '' || mb_strlen($vehicle) > 20) fail('Enter the vehicle number', 422);
-    if (mb_strlen($service) > 100) fail('Service is too long', 422);
+    // name, mobile, vehicle number, address, model, service and paid may be left blank
+    if (mb_strlen($name) > 100) fail('Name is too long', 422);
+    if ($mobile !== '' && !preg_match('/^(\+91)?[0-9]{10}$/', $mobile)) fail('Mobile number must be 10 digits, or leave it blank', 422);
+    if (mb_strlen($vehicle) > 20) fail('Vehicle number is too long', 422);
+    if ($service !== '' && !in_array($service, CARWASH_SERVICES, true)) fail('Choose a service from the list', 422);
     if (mb_strlen($address) > 255 || mb_strlen($model) > 100) fail('Address or model is too long', 422);
+    if (!in_array($mode, ['', 'Online', 'Cash', 'Credit', 'Complimentary'], true)) fail('Choose Online, Cash, Credit or Complimentary', 422);
     if (!in_array($type, ['Car', 'Bike', 'Auto'], true)) fail('Choose Car, Bike or Auto', 422);
     if (!is_numeric($paid) || $paid < 0 || $paid > 10000000) fail('Enter a valid paid amount', 422);
 
+    if ($name === '' && $mobile === '' && $vehicle === '' && $service === '' && $model === '' && $address === '' && (float) $paid == 0.0) fail('Enter at least one detail besides the date', 422);
+
+    if ($mode === 'Complimentary') $paid = 0;
+
     $due = (new DateTimeImmutable($date))->modify('+' . CARWASH_DUE_DAYS . ' days')->format('Y-m-d');
-    return [$date, $name, $mobile, $address, $model, $vehicle, $type, $service, round((float) $paid, 2), $due];
+    return [$date, $name, $mobile, $address, $model, $vehicle, $type, $service, round((float) $paid, 2), $due, $mode];
 }
 
 // Latest entry per vehicle whose last wash was CARWASH_CALL_AFTER or more days ago, with call history attached.
@@ -54,7 +64,7 @@ function cw_call_list(PDO $pdo): array {
     $cutoff = date('Y-m-d', strtotime('-' . CARWASH_CALL_AFTER . ' days'));
     $st = $pdo->prepare('SELECT e.* FROM carwash_entries e
         WHERE e.id = (SELECT e2.id FROM carwash_entries e2 WHERE e2.vehicle_number = e.vehicle_number ORDER BY e2.entry_date DESC, e2.id DESC LIMIT 1)
-        AND e.entry_date <= ? ORDER BY e.entry_date ASC, e.id ASC');
+        AND LENGTH(e.vehicle_number) > 0 AND LENGTH(e.mobile) > 0 AND e.entry_date <= ? ORDER BY e.entry_date ASC, e.id ASC');
     $st->execute([$cutoff]);
     $rows = $st->fetchAll();
     if (!$rows) return [];
@@ -93,9 +103,9 @@ function carwash_route(string $method, string $path, array $user): void {
     }
 
     if ($method === 'POST' && $path === 'carwash/entries') {
-        [$date, $name, $mobile, $address, $model, $vehicle, $type, $service, $paid, $due] = cw_clean(body());
-        $pdo->prepare('INSERT INTO carwash_entries (entry_date,name,mobile,address,model,vehicle_number,vehicle_type,service,paid,due_on,created_by) VALUES (?,?,?,?,?,?,?,?,?,?,?)')
-            ->execute([$date, $name, $mobile, $address, $model, $vehicle, $type, $service, $paid, $due, $user['id']]);
+        [$date, $name, $mobile, $address, $model, $vehicle, $type, $service, $paid, $due, $mode] = cw_clean(body());
+        $pdo->prepare('INSERT INTO carwash_entries (entry_date,name,mobile,address,model,vehicle_number,vehicle_type,service,paid,payment_mode,due_on,created_by) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)')
+            ->execute([$date, $name, $mobile, $address, $model, $vehicle, $type, $service, $paid, $mode, $due, $user['id']]);
         $st = $pdo->prepare('SELECT * FROM carwash_entries WHERE id = ?');
         $st->execute([(int) $pdo->lastInsertId()]);
         json_out(['entry' => cw_row($st->fetch())], 201);
@@ -104,9 +114,28 @@ function carwash_route(string $method, string $path, array $user): void {
     if (preg_match('#^carwash/entries/(\d+)$#', $path, $m)) {
         $id = (int) $m[1];
         if ($method === 'PUT') {
-            [$date, $name, $mobile, $address, $model, $vehicle, $type, $service, $paid, $due] = cw_clean(body());
-            $st = $pdo->prepare('UPDATE carwash_entries SET entry_date=?,name=?,mobile=?,address=?,model=?,vehicle_number=?,vehicle_type=?,service=?,paid=?,due_on=? WHERE id=?');
-            $st->execute([$date, $name, $mobile, $address, $model, $vehicle, $type, $service, $paid, $due, $id]);
+            // a manager can complete an entry only until its payment is recorded; after that only the owner can change it
+            $cur = $pdo->prepare('SELECT payment_mode FROM carwash_entries WHERE id = ?');
+            $cur->execute([$id]);
+            $was = $cur->fetchColumn();
+            if ($was === false) fail('Entry not found', 404);
+            $in = body();
+            if ($user['role'] !== 'admin' && $was === 'Credit') {
+                // a manager may only settle a credit: choose how it was paid; nothing else changes, and the entry then locks
+                $newMode = (string) ($in['payment_mode'] ?? '');
+                if (!in_array($newMode, ['Online', 'Cash'], true)) fail('Choose Online or Cash to record the payment received', 422);
+                $row = $pdo->prepare('SELECT * FROM carwash_entries WHERE id = ?');
+                $row->execute([$id]);
+                $r0 = $row->fetch();
+                $pdo->prepare('UPDATE carwash_entries SET payment_mode = ? WHERE id = ?')->execute([$newMode, $id]);
+                $GLOBALS['notify_text'] = 'received the credit payment: ' . implode(' · ', array_filter([$r0['name'], $r0['vehicle_number'], '₹' . number_format((float) $r0['paid'], 0), $newMode]));
+                $row->execute([$id]);
+                json_out(['entry' => cw_row($row->fetch())]);
+            }
+            if ($user['role'] !== 'admin' && $was !== '') fail('This entry is locked because its payment is recorded. Only the owner can change it.', 403);
+            [$date, $name, $mobile, $address, $model, $vehicle, $type, $service, $paid, $due, $mode] = cw_clean(body());
+            $st = $pdo->prepare('UPDATE carwash_entries SET entry_date=?,name=?,mobile=?,address=?,model=?,vehicle_number=?,vehicle_type=?,service=?,paid=?,payment_mode=?,due_on=? WHERE id=?');
+            $st->execute([$date, $name, $mobile, $address, $model, $vehicle, $type, $service, $paid, $mode, $due, $id]);
             $st = $pdo->prepare('SELECT * FROM carwash_entries WHERE id = ?');
             $st->execute([$id]);
             $r = $st->fetch();
@@ -141,10 +170,10 @@ function carwash_route(string $method, string $path, array $user): void {
         $today = date('Y-m-d');
         $monthStart = date('Y-m-01');
         $sum = function (string $where, array $args) use ($pdo): array {
-            $st = $pdo->prepare("SELECT COUNT(*) AS cars, COALESCE(SUM(paid),0) AS earned FROM carwash_entries WHERE $where");
+            $st = $pdo->prepare("SELECT COUNT(*) AS cars, COALESCE(SUM(CASE WHEN payment_mode = 'Credit' THEN 0 ELSE paid END),0) AS earned, COALESCE(SUM(CASE WHEN payment_mode = 'Credit' THEN paid ELSE 0 END),0) AS credit FROM carwash_entries WHERE $where");
             $st->execute($args);
             $r = $st->fetch();
-            return ['cars' => (int) $r['cars'], 'earned' => (float) $r['earned']];
+            return ['cars' => (int) $r['cars'], 'earned' => (float) $r['earned'], 'credit' => (float) $r['credit']];
         };
 
         json_out([

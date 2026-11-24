@@ -2,6 +2,7 @@
 declare(strict_types=1);
 require __DIR__ . '/lib.php';
 require __DIR__ . '/carwash.php';
+require __DIR__ . '/notifications.php';
 require __DIR__ . '/planned.php';
 require __DIR__ . '/taxi.php';
 require __DIR__ . '/vehicles.php';
@@ -58,12 +59,40 @@ try {
             $_SESSION['uid'] = (int) $u['id'];
             json_out(['user' => ['id' => (int) $u['id'], 'username' => $u['username'], 'name' => $u['name'], 'role' => $u['role']]]);
 
+        case 'POST change-password': // a signed-in user changes their own password
+            $me = current_user();
+            if (!$me) fail('Not signed in', 401);
+            $in = body();
+            $current = (string) ($in['current'] ?? '');
+            $new = (string) ($in['new'] ?? '');
+            $pdo = db();
+            $key = 'pw:' . $me['username']; $ip = $_SERVER['REMOTE_ADDR'] ?? '';
+            $since = gmdate('Y-m-d H:i:s', time() - 900);
+            $st = $pdo->prepare('SELECT COUNT(*) FROM login_attempts WHERE username = ? AND ip = ? AND attempted_at > ?');
+            $st->execute([$key, $ip, $since]);
+            if ((int) $st->fetchColumn() >= 5) fail('Too many attempts. Try again in 15 minutes.', 429);
+            $st = $pdo->prepare('SELECT password_hash FROM users WHERE id = ?'); $st->execute([$me['id']]);
+            if (!password_verify($current, (string) $st->fetchColumn())) {
+                $pdo->prepare('INSERT INTO login_attempts (username, ip, attempted_at) VALUES (?,?,?)')->execute([$key, $ip, gmdate('Y-m-d H:i:s')]);
+                fail('The current password is not correct', 403);
+            }
+            if (mb_strlen($new) < 10) fail('The new password must be at least 10 characters', 422);
+            if (mb_strlen($new) > 100) fail('The new password is too long', 422);
+            if ($new === $current) fail('Choose a password different from the current one', 422);
+            if (stripos($new, $me['username']) !== false) fail('The password must not contain your username', 422);
+            $pdo->prepare('UPDATE users SET password_hash = ? WHERE id = ?')->execute([password_hash($new, PASSWORD_DEFAULT), $me['id']]);
+            $pdo->prepare('DELETE FROM login_attempts WHERE username = ? AND ip = ?')->execute([$key, $ip]);
+            session_regenerate_id(true);
+            json_out(['ok' => true]);
+
         case 'POST logout':
             $_SESSION = [];
             session_destroy();
             json_out(['ok' => true]);
 
         default:
+            if (($watched = current_user()) && $watched['role'] === 'manager') notify_watch($watched, $method, $path);
+            if (str_starts_with($path, 'notifications')) notifications_route($method, $path, require_role('admin'));
             if (str_starts_with($path, 'investments') || str_starts_with($path, 'loans')) investments_route($method, $path, require_role('admin'));
             if (str_starts_with($path, 'expenses')) expenses_route($method, $path, require_role('admin', 'manager'));
             if (str_starts_with($path, 'attendance')) attendance_route($method, $path, require_role('admin', 'manager'));

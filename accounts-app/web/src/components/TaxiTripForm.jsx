@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { api } from "../api.js";
+import { useAuth } from "../auth.jsx";
+import ConfirmSave from "./ConfirmSave.jsx";
 import OtherExpenses, { itemsFromRows, rowsFromTrip, totalOf } from "./OtherExpenses.jsx";
 import TimeInput from "./TimeInput.jsx";
-import { money, todayIST } from "../lib/format.js";
+import { fmtDate, money, todayIST } from "../lib/format.js";
 
 const field =
   "w-full rounded-md border border-input bg-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary";
@@ -28,6 +30,9 @@ export default function TaxiTripForm({ trip, drivers, vehicles, last, preset, on
     return o;
   });
   const initialAdvance = trip?.advance ? String(trip.advance) : "";
+  const { user } = useAuth();
+  const isAdmin = user.role === "admin";
+  const [confirming, setConfirming] = useState(false); // the "are you sure?" step
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [others, setOthers] = useState(() => rowsFromTrip(trip)); // the day's other expenses (parking, puncture…)
@@ -56,6 +61,10 @@ export default function TaxiTripForm({ trip, drivers, vehicles, last, preset, on
     e.preventDefault();
     setError("");
     if (!f.on_leave && (unfinished.out || unfinished.in)) { setError("Finish the time (hour, minutes and AM/PM), or clear it, before saving."); return; }
+    setConfirming(true);
+  };
+
+  const save = async () => {
     setBusy(true);
     try {
       const body = { ...f, other_items: itemsFromRows(others) };
@@ -64,11 +73,17 @@ export default function TaxiTripForm({ trip, drivers, vehicles, last, preset, on
       const d = trip ? await api(`taxi/trips/${trip.id}`, { method: "PUT", body }) : await api("taxi/trips", { method: "POST", body });
       onSaved(d.trip);
     } catch (err) {
+      setConfirming(false);
       setError(err.message);
     } finally {
       setBusy(false);
     }
   };
+
+  const summary = f.on_leave
+    ? [["Date", fmtDate(f.trip_date)], ["Driver", driver?.name ?? ""], ["Car", car ? car.code.slice(-4) : ""], ["Day", "Leave / did not run"], ...(n("advance") ? [["Advance paid", money(n("advance"))]] : [])]
+    : [["Date", fmtDate(f.trip_date)], ["Driver", driver?.name ?? ""], ["Car", car ? car.code.slice(-4) : ""], ["Total earning", money(n("total_earning"))], ["Payout", money(n("payout"))],
+       ["Online transfer", money(n("online_transfer"))], ["Parking", money(n("parking"))], ["Cash to collect", money(cash)], ...(n("advance") ? [["Advance paid", money(n("advance"))]] : [])];
 
   const L = ({ id, children }) => <label htmlFor={id} className="text-sm font-semibold mb-1 block">{children}</label>;
   // a plain function (not a component): a component created inside this form would be rebuilt on every keystroke and the cursor would be lost after each digit
@@ -136,13 +151,16 @@ export default function TaxiTripForm({ trip, drivers, vehicles, last, preset, on
           </>
         )}
         <div><L id="tt-notes">Notes</L><input id="tt-notes" className={field} value={f.notes} onChange={set("notes")} maxLength={500} placeholder="e.g. tyre puncture, airport parking" /></div>
-        <p className="text-xs text-muted-foreground">You can save at any point and come back to add the rest (open the day on the sheet). An advance entered here reaches the driver’s balance and is taken off the salary slip. Damages are entered separately with “+ ADVANCE / DAMAGE”.</p>
+        {isAdmin
+          ? <p className="text-xs text-muted-foreground">You can save at any point and come back to add the rest (open the day on the sheet). An advance entered here reaches the driver’s balance and is taken off the salary slip. Damages are entered separately with “+ ADVANCE / DAMAGE”.</p>
+          : <p className="text-xs text-muted-foreground">Check everything before you save. After you confirm, the entry is locked and only the admin can change it. An advance entered here is taken off the driver’s salary slip.</p>}
         {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
         <div className="flex justify-end gap-3 pt-2">
           <button type="button" onClick={onClose} className="px-5 py-2.5 rounded-full border border-border font-bold text-sm tracking-wider hover:bg-muted">CANCEL</button>
           <button type="submit" disabled={busy} className="px-6 py-2.5 rounded-full bg-primary text-primary-foreground font-bold text-sm tracking-wider hover:opacity-90 disabled:opacity-60">{busy ? "SAVING…" : "SAVE"}</button>
         </div>
       </form>
+      {confirming && <ConfirmSave rows={summary} locks={!isAdmin && !trip} busy={busy} onConfirm={save} onCancel={() => setConfirming(false)} />}
     </div>
   );
 }

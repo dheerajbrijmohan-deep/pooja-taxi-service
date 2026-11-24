@@ -5,6 +5,7 @@ return [
     'driver' => 'mysql',
     'mysql' => [
         'host' => 'localhost',
+        'port' => 3306,
         'name' => 'youracct_thepoojagroup',
         'user' => 'youracct_app',
         'pass' => 'CHANGE_ME',
