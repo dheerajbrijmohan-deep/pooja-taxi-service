@@ -6,6 +6,8 @@ import CallList from "../components/CallList.jsx";
 import DailyBars from "../components/DailyBars.jsx";
 import DueCell from "../components/DueCell.jsx";
 import CarWashForm from "../components/CarWashForm.jsx";
+import AppointmentForm from "../components/AppointmentForm.jsx";
+import { slotLabel, STATUS_STYLE } from "../lib/appointments.js";
 import SharePie from "../components/SharePie.jsx";
 import { earned } from "../lib/carwash.js";
 import ConfirmSave from "../components/ConfirmSave.jsx";
@@ -34,6 +36,8 @@ export default function CarWash() {
   const [stats, setStats] = useState(null);
   const [passes, setPasses] = useState([]);
   const [callData, setCallData] = useState(null);
+  const [appts, setAppts] = useState([]); // today and tomorrow
+  const [apptForm, setApptForm] = useState(null);
   const [error, setError] = useState("");
   const [form, setForm] = useState(null); // null | {} (new) | entry (edit)
   const [q, setQ] = useState("");
@@ -46,7 +50,9 @@ export default function CarWash() {
 
   const load = useCallback(async () => {
     try {
-      const [e, s, c, m] = await Promise.all([api("carwash/entries"), api("carwash/stats"), api("carwash/call-list"), api("carwash/memberships")]);
+      const tom = new Date(Date.now() + 86400000 + 19800000).toISOString().slice(0, 10);
+      const [e, s, c, m, ap] = await Promise.all([api("carwash/entries"), api("carwash/stats"), api("carwash/call-list"), api("carwash/memberships"), api(`carwash/appointments?from=${todayIST()}&to=${tom}`)]);
+      setAppts(ap.appointments);
       setEntries(e.entries);
       setPasses(m.memberships);
       setStats(s);
@@ -129,9 +135,39 @@ export default function CarWash() {
         </div>
       )}
 
+
+      {stats && (() => {
+        const live = appts.filter((a) => a.status !== "Cancelled" && a.status !== "No-show");
+        const todays = live.filter((a) => a.appt_date === stats.today);
+        const tomorrows = live.filter((a) => a.appt_date !== stats.today);
+        return (
+          <div className="mb-6 bg-card rounded-2xl shadow-card border border-border overflow-hidden">
+            <div className="flex flex-wrap items-center justify-between gap-2 p-4 border-b border-border">
+              <h2 className="text-xs font-semibold tracking-widest text-muted-foreground">APPOINTMENTS · TODAY {todays.length} · TOMORROW {tomorrows.length}</h2>
+              <div className="flex gap-2">
+                <button onClick={() => setApptForm({})} className="px-4 py-2 rounded-full bg-primary text-primary-foreground font-bold text-xs tracking-wider hover:opacity-90">+ BOOK</button>
+                <Link to="appointments" className="px-4 py-2 rounded-full border border-primary text-primary font-bold text-xs tracking-wider hover:bg-primary hover:text-primary-foreground">OPEN ›</Link>
+              </div>
+            </div>
+            {todays.length + tomorrows.length === 0 ? <p className="p-5 text-sm text-muted-foreground">No appointments today or tomorrow.</p> : (
+              <ul className="divide-y divide-border">
+                {[...todays, ...tomorrows].map((a) => (
+                  <li key={a.id} className="px-4 py-2.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+                    <span className="w-24 text-xs font-bold text-muted-foreground">{a.appt_date === stats.today ? "TODAY" : "TOMORROW"}</span>
+                    <span className="font-semibold w-36">{slotLabel(a.slot_hour)}</span>
+                    <span className="flex-1 min-w-40">{a.name || a.vehicle_number}{a.name && a.vehicle_number ? ` · ${a.vehicle_number}` : ""} <span className="text-muted-foreground">{a.service}</span></span>
+                    <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-bold tracking-wider ${STATUS_STYLE[a.status]}`}>{a.status.toUpperCase()}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        );
+      })()}
+
       <div id="entries" className="mb-8 bg-card rounded-2xl shadow-card border border-border overflow-hidden">
         <div className="flex flex-wrap items-center justify-between gap-3 p-4 border-b border-border">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <h2 className="text-xs font-semibold tracking-widest text-muted-foreground mr-2">{searching ? "SEARCH RESULTS" : "ENTRIES FOR"}</h2>
             {!searching && (
               <div className="inline-flex rounded-full border border-border overflow-hidden mr-2">
@@ -170,7 +206,7 @@ export default function CarWash() {
             {creditTotal > 0 && <span className="text-muted-foreground"> · <span className="font-semibold text-foreground">{money(creditTotal)}</span> on credit (not counted)</span>}
           </div>
         )}
-        <div className="overflow-x-auto">
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-sm" style={{ minWidth: 1000 }}>
             <thead className="bg-muted">
               <tr>
@@ -208,6 +244,29 @@ export default function CarWash() {
             </tbody>
           </table>
         </div>
+        <ul className="md:hidden divide-y divide-border">
+          {rows.map((r) => (
+            <li key={r.id} className="p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="font-semibold break-words">{r.name || "—"}</div>
+                  <div className="font-semibold tracking-wide text-sm">{r.vehicle_number || "—"} <span className="text-muted-foreground font-normal">{[r.vehicle_type, r.model].filter(Boolean).join(" · ")}</span></div>
+                </div>
+                <div className={`text-right font-bold whitespace-nowrap ${r.payment_mode === "Credit" ? "text-muted-foreground italic" : ""}`}>{money(r.paid)}</div>
+              </div>
+              <div className="mt-1 text-sm text-muted-foreground">{[fmtDate(r.entry_date, false), r.service, r.payment_mode === "Credit" ? "CREDIT" : r.payment_mode || "Not paid yet"].filter(Boolean).join(" · ")}</div>
+              <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1">
+                {r.mobile && <a href={`tel:${r.mobile}`} className="text-sm font-bold text-primary">📞 {r.mobile}</a>}
+                {user.role === "admin" || !r.payment_mode
+                  ? <button onClick={() => setForm(r)} className="text-xs font-bold tracking-wider text-primary py-1">EDIT</button>
+                  : <span className="text-xs font-bold tracking-wider text-muted-foreground">🔒 LOCKED</span>}
+                {user.role === "admin" && <button onClick={() => remove(r)} className="text-xs font-bold tracking-wider text-destructive py-1">DELETE</button>}
+              </div>
+            </li>
+          ))}
+          {entries && rows.length === 0 && <li className="px-4 py-10 text-center text-muted-foreground">{searching ? "No entries match your search." : `No entries on ${fmtDate(day)}.`}</li>}
+          {!entries && !error && <li className="px-4 py-10 text-center text-muted-foreground">Loading…</li>}
+        </ul>
       </div>
 
       {entries && (
@@ -218,7 +277,7 @@ export default function CarWash() {
       )}
       {entries && <div className="mb-8"><DailyBars rows={entries} today={today} dateOf={(e) => e.entry_date} title="VEHICLES PER DAY" unit="vehicles" singular="vehicle" /></div>}
 
-      <div className="mb-8"><CallList data={callData} today={today} onChanged={load} /></div>
+      <div className="mb-8"><CallList data={callData} today={today} onChanged={load} onBook={(c) => setApptForm({ initial: { name: c.name, mobile: c.mobile, vehicle_number: c.vehicle_number, vehicle_type: c.vehicle_type, model: c.model, service: c.service } })} /></div>
 
       {creditOpen && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-start md:items-center justify-center p-4 overflow-y-auto" onMouseDown={(e) => e.target === e.currentTarget && setCreditOpen(false)}>
@@ -293,6 +352,8 @@ export default function CarWash() {
         />
       )}
 
+      {apptForm && <AppointmentForm initial={apptForm.initial} onClose={() => setApptForm(null)} onSaved={() => { setApptForm(null); load(); }} />}
+      <button onClick={() => setForm({})} aria-label="New entry" className="md:hidden print:hidden fixed bottom-5 right-5 z-40 w-14 h-14 rounded-full bg-primary text-primary-foreground text-3xl font-bold shadow-card">+</button>
       {form && <CarWashForm entry={form.id ? form : null} onClose={() => setForm(null)} onSaved={() => { setForm(null); load(); }} />}
     </div>
   );

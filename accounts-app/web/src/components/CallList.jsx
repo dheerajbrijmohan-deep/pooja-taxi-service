@@ -82,7 +82,7 @@ function CommentModal({ c, k, onClose, onSaved }) {
 }
 
 // Customers whose last wash/visit was `call_after_days`+ days ago (and who haven't come again).
-export default function CallList({ data, today, onChanged, kind = "carwash" }) {
+export default function CallList({ data, today, onChanged, onBook, kind = "carwash" }) {
   const k = KINDS[kind];
   const [open, setOpen] = useState(null);
   const [all, setAll] = useState(false);
@@ -116,9 +116,12 @@ export default function CallList({ data, today, onChanged, kind = "carwash" }) {
                 <div className="text-sm flex-1 min-w-48 text-muted-foreground">
                   {last ? <><span className="text-foreground">“{last.comment}”</span> <span className="text-xs">· {when(last.at)}, {last.by}</span></> : "Not called yet"}
                 </div>
-                <button onClick={() => setOpen(c)} className="px-4 py-2 rounded-full bg-primary text-primary-foreground font-bold text-xs tracking-wider hover:opacity-90">
-                  {last ? "ADD COMMENT" : "CALLED · COMMENT"}
-                </button>
+                <div className="flex flex-wrap gap-2">
+                  <button onClick={() => setOpen(c)} className="px-4 py-2 rounded-full bg-primary text-primary-foreground font-bold text-xs tracking-wider hover:opacity-90">
+                    {last ? "ADD COMMENT" : "CALLED · COMMENT"}
+                  </button>
+                  {onBook && <button onClick={() => onBook(c)} className="px-4 py-2 rounded-full border border-primary text-primary font-bold text-xs tracking-wider hover:bg-primary hover:text-primary-foreground">BOOK APPOINTMENT</button>}
+                </div>
               </li>
             );
           })}

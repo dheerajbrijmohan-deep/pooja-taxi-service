@@ -7,7 +7,10 @@ export default function Login() {
   const navigate = useNavigate();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [error, setError] = useState(() => {
+    try { if (sessionStorage.getItem("session-expired")) { sessionStorage.removeItem("session-expired"); return "Your session has ended. Please sign in again."; } } catch { /* ignore */ }
+    return "";
+  });
   const [busy, setBusy] = useState(false);
 
   if (!loading && user) return <Navigate to={homeFor(user)} replace />;
@@ -27,7 +30,7 @@ export default function Login() {
   };
 
   const field =
-    "w-full rounded-md border border-input bg-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary";
+    "w-full rounded-md border border-input bg-white px-3 py-2.5 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary";
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4">

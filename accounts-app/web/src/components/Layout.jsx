@@ -2,6 +2,8 @@ import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { homeFor, useAuth } from "../auth.jsx";
 import ChangePassword from "./ChangePassword.jsx";
+import SessionGuard from "./SessionGuard.jsx";
+import AppointmentReminder from "./AppointmentReminder.jsx";
 import NotificationBell from "./NotificationBell.jsx";
 import { BUSINESSES } from "../lib/businesses.js";
 
@@ -58,8 +60,10 @@ export default function Layout({ children }) {
           </button>
         </div>
       </aside>
+      <SessionGuard />
       {pwOpen && <ChangePassword onClose={() => setPwOpen(false)} />}
       <main className="flex-1 min-w-0 p-5 md:p-10 print:p-0">
+        <AppointmentReminder />
         {children}
       </main>
     </div>

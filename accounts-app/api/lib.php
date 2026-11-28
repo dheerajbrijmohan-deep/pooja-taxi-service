@@ -33,7 +33,14 @@ function fail(string $msg, int $status): never {
     json_out(['error' => $msg], $status);
 }
 
+// A sign-in lasts this long (8 hours) and is NOT lengthened by ordinary activity. A few minutes before the end the app asks the
+// person to press CONTINUE, which calls `session/extend` and starts another full period. Without that, they are signed out.
+function session_seconds(): int {
+    return (int) (config()['session_seconds'] ?? 28800);
+}
+
 function start_session(): void {
+    ini_set('session.gc_maxlifetime', (string) (session_seconds() + 3600)); // keep the session file for as long as the sign-in lasts
     session_name('pooja_sid');
     session_set_cookie_params([
         'lifetime' => 0,
@@ -43,6 +50,16 @@ function start_session(): void {
         'samesite' => 'Strict',
     ]);
     session_start();
+    if (isset($_SESSION['uid'])) {
+        if (!isset($_SESSION['exp'])) $_SESSION['exp'] = time() + session_seconds(); // a sign-in made before this rule existed
+        elseif ($_SESSION['exp'] <= time()) unset($_SESSION['uid'], $_SESSION['exp']); // time is up: the person must sign in again
+    }
+}
+
+function session_begin(): void { $_SESSION['exp'] = time() + session_seconds(); }
+
+function session_info(): array {
+    return ['expires_in' => max(0, (int) ($_SESSION['exp'] ?? 0) - time()), 'session_seconds' => session_seconds()];
 }
 
 function current_user(): ?array {

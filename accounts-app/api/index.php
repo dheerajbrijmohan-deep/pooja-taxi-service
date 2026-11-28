@@ -4,6 +4,7 @@ require __DIR__ . '/lib.php';
 require __DIR__ . '/carwash.php';
 require __DIR__ . '/notifications.php';
 require __DIR__ . '/memberships.php';
+require __DIR__ . '/appointments.php';
 require __DIR__ . '/planned.php';
 require __DIR__ . '/taxi.php';
 require __DIR__ . '/vehicles.php';
@@ -29,7 +30,12 @@ try {
 
     switch ("$method $path") {
         case 'GET me':
-            json_out(['user' => current_user()]);
+            json_out(['user' => ($u = current_user()), 'session' => $u ? session_info() : null]);
+
+        case 'POST session/extend': // CONTINUE on the "session is about to expire" box
+            if (!current_user()) fail('Not signed in', 401);
+            session_begin();
+            json_out(['session' => session_info()]);
 
         case 'POST login':
             $in = body();
@@ -58,7 +64,8 @@ try {
             $pdo->prepare('UPDATE users SET last_login_at = ? WHERE id = ?')->execute([gmdate('Y-m-d H:i:s'), $u['id']]);
             session_regenerate_id(true);
             $_SESSION['uid'] = (int) $u['id'];
-            json_out(['user' => ['id' => (int) $u['id'], 'username' => $u['username'], 'name' => $u['name'], 'role' => $u['role']]]);
+            session_begin();
+            json_out(['user' => ['id' => (int) $u['id'], 'username' => $u['username'], 'name' => $u['name'], 'role' => $u['role']], 'session' => session_info()]);
 
         case 'POST change-password': // a signed-in user changes their own password
             $me = current_user();
@@ -84,7 +91,7 @@ try {
             $pdo->prepare('UPDATE users SET password_hash = ? WHERE id = ?')->execute([password_hash($new, PASSWORD_DEFAULT), $me['id']]);
             $pdo->prepare('DELETE FROM login_attempts WHERE username = ? AND ip = ?')->execute([$key, $ip]);
             session_regenerate_id(true);
-            json_out(['ok' => true]);
+            json_out(['ok' => true, 'session' => session_info()]);
 
         case 'POST logout':
             $_SESSION = [];

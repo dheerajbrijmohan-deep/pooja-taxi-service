@@ -74,6 +74,11 @@ function cw_call_list(PDO $pdo): array {
         AND LENGTH(e.vehicle_number) > 0 AND LENGTH(e.mobile) > 0 AND e.entry_date <= ? ORDER BY e.entry_date ASC, e.id ASC');
     $st->execute([$cutoff]);
     $rows = $st->fetchAll();
+    // a customer who has booked an appointment (today or later) is not called again; a missed one comes back onto the list
+    $st = $pdo->prepare("SELECT DISTINCT vehicle_number FROM carwash_appointments WHERE status IN ('Booked','Confirmed') AND appt_date >= ? AND LENGTH(vehicle_number) > 0");
+    $st->execute([date('Y-m-d')]);
+    $booked = array_flip($st->fetchAll(PDO::FETCH_COLUMN));
+    $rows = array_values(array_filter($rows, fn($r) => !isset($booked[$r['vehicle_number']])));
     if (!$rows) return [];
 
     $vehicles = array_values(array_unique(array_column($rows, 'vehicle_number')));
@@ -93,6 +98,7 @@ function cw_call_list(PDO $pdo): array {
 
 function carwash_route(string $method, string $path, array $user): void {
     $pdo = db();
+    if (str_starts_with($path, 'carwash/appointments')) appointments_route($method, $path, $user);
     if (str_starts_with($path, 'carwash/memberships') || str_starts_with($path, 'carwash/holidays')) membership_route($method, $path, $user);
 
     if ($method === 'GET' && $path === 'carwash/entries') {

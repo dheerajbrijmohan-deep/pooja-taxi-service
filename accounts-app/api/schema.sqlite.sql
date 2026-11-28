@@ -437,3 +437,24 @@ CREATE TABLE IF NOT EXISTS public_holidays (
   holiday_date TEXT NOT NULL UNIQUE,
   name TEXT NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS carwash_appointments (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  appt_date TEXT NOT NULL,
+  slot_hour INTEGER NOT NULL,
+  name TEXT NOT NULL DEFAULT '',
+  mobile TEXT NOT NULL DEFAULT '',
+  vehicle_number TEXT NOT NULL DEFAULT '',
+  vehicle_type TEXT NOT NULL DEFAULT 'Car',
+  model TEXT NOT NULL DEFAULT '',
+  service TEXT NOT NULL DEFAULT '',
+  notes TEXT NOT NULL DEFAULT '',
+  status TEXT NOT NULL DEFAULT 'Booked',
+  slot_key TEXT NULL,
+  entry_id INTEGER NULL,
+  created_by INTEGER NULL,
+  created_by_name TEXT NOT NULL DEFAULT '',
+  created_at TEXT NOT NULL
+);
+CREATE UNIQUE INDEX IF NOT EXISTS uq_appt_slot ON carwash_appointments (slot_key);
+CREATE INDEX IF NOT EXISTS idx_appt_date ON carwash_appointments (appt_date, slot_hour);

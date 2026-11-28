@@ -6,7 +6,7 @@ import { todayIST, fmtDate, money } from "../lib/format.js";
 import ConfirmSave from "./ConfirmSave.jsx";
 
 const field =
-  "w-full rounded-md border border-input bg-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary";
+  "w-full rounded-md border border-input bg-white px-3 py-2.5 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary";
 
 const blank = () => ({ entry_date: todayIST(), name: "", mobile: "", address: "", model: "", vehicle_number: "", vehicle_type: "Car", service: "", paid: "", payment_mode: "" });
 
